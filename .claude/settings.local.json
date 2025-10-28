@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs cat:*)",
+      "Bash(npm outdated:*)",
+      "Bash(bun install)",
+      "Bash(bun run dev:*)",
+      "Bash(bun run build:*)",
+      "Bash(bun add:*)",
+      "Bash(bun run:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

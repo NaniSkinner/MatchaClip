@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@theme {
+  --color-surfacePrimary: oklch(.141 .005 285.823);
+  --color-darkSurfacePrimary: oklch(.141 .005 285.823);
+  --gradient-radial: radial-gradient(var(--tw-gradient-stops));
+  --gradient-conic: conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops));
+}
+
+.moveable-origin {
+  display: none !important;
+}
+.moveable-line.moveable-direction {
+  display: none !important;
+}
