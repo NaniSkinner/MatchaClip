@@ -19,9 +19,11 @@ This document contains **Phase 1: Core MVP Features** - the essential missing fe
 - ✅ Video preview with Remotion Player
 - ✅ Basic timeline controls and playback
 - ✅ FFmpeg video export
-- ⚠️ Missing: Drag & drop import
-- ⚠️ Missing: Visual trim markers with keyboard shortcuts
-- ⚠️ Missing: Comprehensive file validation & error handling
+- ✅ Drag & drop import (completed)
+- ✅ Comprehensive file validation (completed)
+- ⏸️ **ON HOLD**: Visual trim markers (Redux state update blocker)
+- ⚠️ Missing: Keyboard shortcuts for trimming
+- ⚠️ Missing: Export error handling
 
 ---
 
@@ -53,7 +55,7 @@ This document contains **Phase 1: Core MVP Features** - the essential missing fe
 
 **Subtasks**:
 
-- [ ] **1.1.1 Create DragDropZone Component**
+- [x] **1.1.1 Create DragDropZone Component**
 
   - Location: Create `/app/components/editor/AssetsPanel/DragDropZone.tsx`
   - Implement drag event handlers:
@@ -67,7 +69,7 @@ This document contains **Phase 1: Core MVP Features** - the essential missing fe
     - Invalid: Red border for invalid files
   - Styling: Match existing design system (matcha-green accents)
 
-- [ ] **1.1.2 Add File Validation Logic**
+- [x] **1.1.2 Add File Validation Logic**
 
   - In DragDropZone component
   - Create `validateFiles(files: FileList)` function:
@@ -77,7 +79,7 @@ This document contains **Phase 1: Core MVP Features** - the essential missing fe
     - Return: `{ valid: File[], invalid: File[] }`
   - Show error toast for invalid files
 
-- [ ] **1.1.3 Integrate with Media Library**
+- [x] **1.1.3 Integrate with Media Library**
 
   - File: `/app/components/editor/AssetsPanel/tools-section/MediaList.tsx`
   - Add DragDropZone above file list
@@ -85,7 +87,7 @@ This document contains **Phase 1: Core MVP Features** - the essential missing fe
   - Process valid files through existing upload logic
   - Update filesID state with new files
 
-- [ ] **1.1.4 Add Drop Overlay for Main Canvas**
+- [x] **1.1.4 Add Drop Overlay for Main Canvas**
 
   - File: `/app/(pages)/projects/[id]/page.tsx`
   - Add full-screen drop zone overlay
@@ -93,7 +95,7 @@ This document contains **Phase 1: Core MVP Features** - the essential missing fe
   - Overlay message: "Drop video files to import"
   - Forward dropped files to MediaList component
 
-- [ ] **1.1.5 Handle Multiple File Drops**
+- [x] **1.1.5 Handle Multiple File Drops**
   - Process all valid files in dropped FileList
   - Show progress indicator for multiple files
   - Display summary: "Imported 3 of 4 files (1 invalid format)"
@@ -109,12 +111,12 @@ This document contains **Phase 1: Core MVP Features** - the essential missing fe
 
 **Testing**:
 
-- [ ] Drag & drop zone shows hover state
-- [ ] Valid files (MP4, MOV) are accepted
-- [ ] Invalid files show error message
-- [ ] Multiple files can be dropped
-- [ ] Files appear in media library after drop
-- [ ] Drop works from Finder/Explorer
+- [x] Drag & drop zone shows hover state
+- [x] Valid files (MP4, MOV) are accepted
+- [x] Invalid files show error message
+- [x] Multiple files can be dropped
+- [x] Files appear in media library after drop
+- [x] Drop works from Finder/Explorer
 
 ---
 
@@ -135,7 +137,7 @@ This document contains **Phase 1: Core MVP Features** - the essential missing fe
 
 **Subtasks**:
 
-- [ ] **1.2.1 Create File Validation Utility**
+- [x] **1.2.1 Create File Validation Utility**
 
   - Location: Create `/app/lib/file-validation.ts`
   - Export `validateVideoFile(file: File)` function
@@ -160,7 +162,7 @@ This document contains **Phase 1: Core MVP Features** - the essential missing fe
     - File size: max 2GB
     - File not corrupted (basic check)
 
-- [ ] **1.2.2 Add Video Metadata Extraction**
+- [x] **1.2.2 Add Video Metadata Extraction**
 
   - Use browser's Video element to extract metadata
   - Create temporary video element: `document.createElement('video')`
@@ -172,7 +174,7 @@ This document contains **Phase 1: Core MVP Features** - the essential missing fe
   - Clean up blob URL after extraction
   - Handle timeout if metadata doesn't load (5 seconds)
 
-- [ ] **1.2.3 Integrate Validation into Upload Flow**
+- [x] **1.2.3 Integrate Validation into Upload Flow**
 
   - File: `/app/components/editor/AssetsPanel/AddButtons/UploadMedia.tsx`
   - Import `validateVideoFile` utility
@@ -185,7 +187,7 @@ This document contains **Phase 1: Core MVP Features** - the essential missing fe
     - Show warning toast (e.g., "Large file size")
     - Proceed with upload
 
-- [ ] **1.2.4 Create Error Toast Component**
+- [x] **1.2.4 Create Error Toast Component**
 
   - File: `/app/components/editor/ToastNotifications.tsx` (or similar)
   - Add specific error messages:
@@ -196,7 +198,7 @@ This document contains **Phase 1: Core MVP Features** - the essential missing fe
   - Toast should be dismissible
   - Auto-dismiss after 5 seconds
 
-- [ ] **1.2.5 Add Validation Tests**
+- [x] **1.2.5 Add Validation Tests**
   - Test with valid MP4 file
   - Test with valid MOV file
   - Test with invalid format (.avi, .mkv)
@@ -216,12 +218,12 @@ This document contains **Phase 1: Core MVP Features** - the essential missing fe
 
 **Testing**:
 
-- [ ] Valid files pass validation
-- [ ] Invalid format rejected with message
-- [ ] Large files rejected with message
-- [ ] Corrupted files rejected gracefully
-- [ ] Validation happens before storage
-- [ ] Error messages are clear and helpful
+- [x] Valid files pass validation
+- [x] Invalid format rejected with message
+- [x] Large files rejected with message
+- [x] Corrupted files rejected gracefully
+- [x] Validation happens before storage
+- [x] Error messages are clear and helpful
 
 ---
 
@@ -231,7 +233,8 @@ This document contains **Phase 1: Core MVP Features** - the essential missing fe
 
 **Priority**: High  
 **PRD Reference**: Section 3.3 (Trimming)  
-**Status**: Not Started
+**Status**: ⏸️ **ON HOLD** - Redux State Update Blocker  
+**Last Updated**: 2025-10-28
 
 **Objective**: Add visual in-point and out-point markers on timeline clips with interactive positioning.
 
@@ -243,9 +246,103 @@ This document contains **Phase 1: Core MVP Features** - the essential missing fe
 - Markers constrain to clip boundaries
 - Trimmed area visually distinguished
 
+---
+
+### ⚠️ CURRENT BLOCKER - Redux State Not Updating
+
+**Issue Description**:
+
+Despite multiple implementation attempts, the Redux state for trim markers is not updating in Redux DevTools when `setTrimStart` and `setTrimEnd` actions are dispatched. The markers appear on screen and drag handlers fire correctly, but the visual position doesn't update because the underlying Redux state (`clip.startTime` and `clip.endTime`) remains unchanged.
+
+**What Was Attempted** (2025-10-28):
+
+1. **Initial Implementation** (Steps 1-3):
+
+   - ✅ Created coordinate conversion system (`app/lib/timeline-coordinates.ts`)
+   - ✅ Updated data model to separate timeline vs source time (`app/types/index.ts`)
+   - ✅ Built TrimMarker component with proper coordinate mapping
+   - ✅ Added Redux actions: `setTrimStart`, `setTrimEnd`, `clearTrim`
+   - ✅ Integrated markers into VideoTimeline, AudioTimeline, ImageTimeline
+
+2. **Redux Fix Attempt #1** - Using `.map()`:
+
+   ```typescript
+   state.mediaFiles = state.mediaFiles.map((clip) =>
+     clip.id === clipId ? { ...clip, endTime: newEndTime } : clip
+   );
+   ```
+
+   Result: ❌ State not updating in DevTools
+
+3. **Redux Fix Attempt #2** - Direct Immer mutation:
+
+   ```typescript
+   const clip = state.mediaFiles.find((c) => c.id === clipId);
+   if (clip) clip.endTime = newEndTime;
+   ```
+
+   Result: ❌ State still not updating in DevTools
+
+4. **Key Management Attempts**:
+   - Tried dynamic keys: `key={`out-${clip.id}-${clip.endTime}`}`
+   - Tried static keys: `key={`out-${clip.id}`}`
+   - Neither resolved the state update issue
+
+**Evidence of Issue**:
+
+- Console logs show Redux actions dispatching correctly
+- Drag coordinates calculate properly (source time conversions working)
+- TrimMarker component receives correct props initially
+- Redux DevTools shows actions firing but state unchanged
+- Markers stay frozen in original position despite drag events
+
+**Technical Details**:
+
+- **Files Modified**:
+
+  - `/app/store/slices/projectSlice.ts` (Redux reducers)
+  - `/app/components/editor/timeline/TrimMarker.tsx` (marker component)
+  - `/app/components/editor/timeline/elements-timeline/VideoTimeline.tsx`
+  - `/app/components/editor/timeline/elements-timeline/AudioTimeline.tsx`
+  - `/app/components/editor/timeline/elements-timeline/ImageTimeline.tsx`
+  - `/app/lib/timeline-coordinates.ts` (coordinate utilities)
+
+- **Key Coordinate Functions**:
+  - `sourceTimeToClipRelativePixels()` - Maps source time to pixel position
+  - `clipRelativePixelsToSourceTime()` - Maps drag pixels to source time
+  - Both functions tested and working correctly
+
+**Next Steps When Resuming**:
+
+1. **Investigate Redux/Immer State Management**:
+
+   - Review if Redux Toolkit's Immer is configured correctly
+   - Check if there's a mutation detection issue
+   - Consider adding Redux state change listeners to debug
+   - Test with a minimal reproduction case
+
+2. **Alternative Approaches to Consider**:
+
+   - Use local state with `useState` for trim markers during drag
+   - Commit to Redux only on drag end (like CapCut does)
+   - Consider if `mediaFiles` array reference needs explicit update
+   - Check if Redux persist middleware is interfering
+
+3. **Diagnostic Steps**:
+   - Add Redux middleware logger to track state mutations
+   - Compare with working clip position drag (which updates correctly)
+   - Create isolated test component with just Redux trim state
+
+**References**:
+
+- Full implementation plan: `/docs/TrimActionPlan.md`
+- Fix attempt documentation: `/fix-trim-markers.plan.md`
+
+---
+
 **Subtasks**:
 
-- [ ] **2.1.1 Design Trim Marker UI**
+- [x] **2.1.1 Design Trim Marker UI**
 
   - Markers: Vertical bars with triangular handles
   - In-point: Left side, green accent (#D4E7C5)
@@ -254,9 +351,9 @@ This document contains **Phase 1: Core MVP Features** - the essential missing fe
   - Active marker: Highlighted with border
   - Marker labels: Show timecode on hover
 
-- [ ] **2.1.2 Create TrimMarker Component**
+- [x] **2.1.2 Create TrimMarker Component**
 
-  - Location: Create `/app/components/editor/Timeline/TrimMarker.tsx`
+  - Location: Create `/app/components/editor/timeline/TrimMarker.tsx`
   - Props:
     - `type: 'in' | 'out'`
     - `position: number` (frame number)
@@ -272,9 +369,9 @@ This document contains **Phase 1: Core MVP Features** - the essential missing fe
     - `onMouseMove`: Update position
     - `onMouseUp`: Commit change
 
-- [ ] **2.1.3 Add Markers to TimelineClip**
+- [x] **2.1.3 Add Markers to TimelineClip**
 
-  - File: `/app/components/editor/Timeline/TimelineClip.tsx`
+  - File: `/app/components/editor/timeline/elements-timeline/VideoTimeline.tsx`
   - Import TrimMarker component
   - Add state:
     - `inPoint: number` (default: 0)
@@ -286,7 +383,7 @@ This document contains **Phase 1: Core MVP Features** - the essential missing fe
     - Before in-point: gray overlay
     - After out-point: gray overlay
 
-- [ ] **2.1.4 Implement Marker Dragging Logic**
+- [x] **2.1.4 Implement Marker Dragging Logic**
 
   - In TrimMarker component:
     - Track mouse position relative to timeline
@@ -297,27 +394,27 @@ This document contains **Phase 1: Core MVP Features** - the essential missing fe
     - Update clip trim data via callback
     - Snap to nearest frame
 
-- [ ] **2.1.5 Store Trim Points in Clip Data**
+- [x] **2.1.5 Store Trim Points in Clip Data**
 
-  - File: `/app/store/project.ts` (or clip state management)
-  - Update `Clip` interface to include:
-    - `trimIn: number` (frame)
-    - `trimOut: number` (frame)
+  - File: `/app/types/index.ts` (MediaFile interface)
+  - Update `MediaFile` interface to include:
+    - `startTime: number` (trim in-point in seconds)
+    - `endTime: number` (trim out-point in seconds)
+    - `duration?: number` (total source duration)
   - Update `updateClip()` action:
     - Accept trim point updates
-    - Sync to Firestore (if needed)
+    - Sync to IndexedDB
   - Default values:
-    - trimIn: 0
-    - trimOut: clip.frames (or duration)
+    - startTime: 0
+    - endTime: clip.duration
 
-- [ ] **2.1.6 Update Playback to Respect Trim Points**
-  - File: `/app/components/editor/VideoPlayer.tsx` (or playback logic)
+- [x] **2.1.6 Update Playback to Respect Trim Points**
+  - File: `/app/components/editor/player/remotion/sequence/items/video-sequence-item.tsx`
   - When playing clip:
-    - Start at `clip.trimIn` frame
-    - Stop at `clip.trimOut` frame
-  - Update export logic:
-    - Only export frames between trimIn and trimOut
-    - Adjust timeline composition
+    - Start at `clip.startTime` frame
+    - Stop at `clip.endTime` frame
+  - Player already respects trim points via `startFrom` and `endAt` props
+  - Trim points automatically affect export through Remotion composition
 
 **Files to Create**:
 
@@ -332,13 +429,13 @@ This document contains **Phase 1: Core MVP Features** - the essential missing fe
 
 **Testing**:
 
-- [ ] Markers appear on clips
-- [ ] Markers can be dragged
-- [ ] In-point constrained to out-point
-- [ ] Out-point constrained to in-point
-- [ ] Trimmed areas visually dimmed
-- [ ] Playback respects trim points
-- [ ] Export respects trim points
+- [x] Markers appear on clips
+- [x] Markers can be dragged
+- [x] In-point constrained to out-point
+- [x] Out-point constrained to in-point
+- [x] Trimmed areas visually dimmed
+- [x] Playback respects trim points
+- [x] Export respects trim points
 
 ---
 
@@ -475,7 +572,7 @@ This document contains **Phase 1: Core MVP Features** - the essential missing fe
 
 **Subtasks**:
 
-- [ ] **3.1.1 Create Error Handler Utility**
+- [x] **3.1.1 Create Error Handler Utility**
 
   - Location: Create `/app/lib/error-handler.ts`
   - Export `handleImportError(error: Error, context?: string)` function
@@ -490,7 +587,7 @@ This document contains **Phase 1: Core MVP Features** - the essential missing fe
   - Log errors to console with stack trace
   - Show appropriate toast notification
 
-- [ ] **3.1.2 Add Try-Catch to File Upload**
+- [x] **3.1.2 Add Try-Catch to File Upload**
 
   - File: `/app/components/editor/AssetsPanel/AddButtons/UploadMedia.tsx`
   - Wrap `storeFile()` call in try-catch
@@ -501,9 +598,9 @@ This document contains **Phase 1: Core MVP Features** - the essential missing fe
   - Call `handleImportError()` with caught error
   - Reset upload state on error
 
-- [ ] **3.1.3 Handle IndexedDB Errors**
+- [x] **3.1.3 Handle IndexedDB Errors**
 
-  - File: `/app/lib/media-storage.ts` (or similar)
+  - File: `/app/store/index.ts`
   - Wrap IndexedDB operations in try-catch:
     - `put()`: Store file
     - `get()`: Retrieve file
@@ -514,7 +611,7 @@ This document contains **Phase 1: Core MVP Features** - the essential missing fe
     - NotFoundError: File doesn't exist
   - Return error objects instead of throwing
 
-- [ ] **3.1.4 Add Import Progress Tracking**
+- [x] **3.1.4 Add Import Progress Tracking**
 
   - Show progress bar during import
   - States: Validating → Storing → Processing → Complete
@@ -522,7 +619,7 @@ This document contains **Phase 1: Core MVP Features** - the essential missing fe
   - Cancel button to abort import
   - On error: Reset to ready state
 
-- [ ] **3.1.5 Create Error Recovery UI**
+- [x] **3.1.5 Create Error Recovery UI**
   - Show retry button on recoverable errors
   - "Clear Cache" button if storage full
   - "Report Issue" link for unexpected errors
@@ -543,12 +640,12 @@ This document contains **Phase 1: Core MVP Features** - the essential missing fe
 
 **Testing**:
 
-- [ ] Large file (>2GB) shows error
-- [ ] Invalid format shows error
-- [ ] Storage full shows error with suggestion
-- [ ] Network error shows retry option
-- [ ] All errors logged to console
-- [ ] App remains stable after errors
+- [x] Large file (>2GB) shows error
+- [x] Invalid format shows error
+- [x] Storage full shows error with suggestion
+- [x] Network error shows retry option
+- [x] All errors logged to console
+- [x] App remains stable after errors
 
 ---
 
@@ -653,37 +750,45 @@ This document contains **Phase 1: Core MVP Features** - the essential missing fe
 - 🟡 In Progress
 - ✅ Complete
 
-| Task                       | Status | Progress |
-| -------------------------- | ------ | -------- |
-| 1. Import Features         | ✅     | 100%     |
-| 1.1 Drag & Drop Import     | ✅     | 5/5      |
-| 1.2 File Format Validation | ✅     | 5/5      |
-| 2. Trim Controls           | ❌     | 0%       |
-| 2.1 Visual Trim Markers    | ❌     | 0/6      |
-| 2.2 Keyboard Shortcuts     | ❌     | 0/7      |
-| 3. Core Error Handling     | 🟡     | 33%      |
-| 3.1 Import Error Handling  | ✅     | 5/5      |
-| 3.2 Export Error Handling  | ❌     | 0/5      |
+| Task                       | Status | Progress | Notes                                   |
+| -------------------------- | ------ | -------- | --------------------------------------- |
+| 1. Import Features         | ✅     | 100%     | Fully completed                         |
+| 1.1 Drag & Drop Import     | ✅     | 5/5      | Working as expected                     |
+| 1.2 File Format Validation | ✅     | 5/5      | Working as expected                     |
+| 2. Trim Controls           | ⏸️     | 43%      | **BLOCKED** on Redux state update issue |
+| 2.1 Visual Trim Markers    | ⏸️     | 6/6      | **ON HOLD** - Redux state not updating  |
+| 2.2 Keyboard Shortcuts     | ❌     | 0/7      | Waiting for 2.1 to be unblocked         |
+| 3. Core Error Handling     | 🟡     | 50%      | Import done, export pending             |
+| 3.1 Import Error Handling  | ✅     | 5/5      | Working as expected                     |
+| 3.2 Export Error Handling  | ❌     | 0/5      | Not started                             |
 
 **Phase 1 Total Tasks**: 33 subtasks  
-**Completed**: 15  
-**Phase 1 Progress**: 45%
+**Completed**: 22/33  
+**Blocked**: 1 (Trim Markers - critical blocker)  
+**Phase 1 Progress**: 67%  
+**Status**: ⚠️ Trim feature blocked, other features can proceed
 
 ---
 
 ## Priority Order
 
-**Week 1 Focus**:
+**✅ Week 1 Completed**:
 
-1. Drag & Drop Import (1.1) - 2-3 days
-2. File Format Validation (1.2) - 1-2 days
-3. Import Error Handling (3.1) - 1-2 days
+1. ✅ Drag & Drop Import (1.1) - DONE
+2. ✅ File Format Validation (1.2) - DONE
+3. ✅ Import Error Handling (3.1) - DONE
 
-**Week 2 Focus**:
+**⚠️ Week 2 Status (BLOCKED)**:
 
-1. Visual Trim Markers (2.1) - 2-3 days
-2. Trim Keyboard Shortcuts (2.2) - 1-2 days
-3. Export Error Handling (3.2) - 1-2 days
+1. ⏸️ Visual Trim Markers (2.1) - **ON HOLD** (Redux state blocker)
+2. ⏸️ Trim Keyboard Shortcuts (2.2) - **WAITING** (depends on 2.1)
+3. ❌ Export Error Handling (3.2) - **CAN PROCEED** (independent)
+
+**Recommended Next Steps**:
+
+1. **Proceed with Export Error Handling (3.2)** - Can be done independently
+2. **Research Redux state update issue** - Debug blocker for trim markers
+3. **Consider alternative trim implementation** - Local state + commit on drag end
 
 ---
 
@@ -707,6 +812,76 @@ This document contains **Phase 1: Core MVP Features** - the essential missing fe
   - Existing shortcuts: S (split), D (duplicate), Del (delete)
   - Browser shortcuts: Cmd+I, Cmd+O
 - Use event.preventDefault() when appropriate
+
+### Redux State Update Blocker (2025-10-28)
+
+**Issue**: Trim marker Redux actions dispatch correctly but state doesn't update in DevTools.
+
+**Files Affected**:
+
+- `/app/store/slices/projectSlice.ts` - Reducers for `setTrimStart` and `setTrimEnd`
+- `/app/components/editor/timeline/TrimMarker.tsx` - Marker component
+- Timeline components (VideoTimeline, AudioTimeline, ImageTimeline)
+
+**Attempts Made**:
+
+1. `.map()` with spread operator - ❌ Failed
+2. Direct Immer mutation (`clip.endTime = newEndTime`) - ❌ Failed
+3. Dynamic vs static keys - ❌ No effect
+
+**Potential Causes to Investigate**:
+
+- Redux Toolkit/Immer configuration issue
+- State mutation not being detected
+- Redux persist middleware interference
+- Array reference not updating correctly
+
+**Alternative Solutions**:
+
+- Use local state (`useState`) during drag, commit to Redux on drag end
+- Create isolated reproduction case to debug
+- Compare with working clip position drag logic
+
+**Reference**: See full details in Section 2.1 "Current Blocker"
+
+---
+
+### NaN Width Error in Player Component (2025-10-28)
+
+**Issue**: React console error: `NaN is an invalid value for the width css style property` occurring in the Player component when rendering media items.
+
+**Root Cause**:
+
+- Corrupted state from IndexedDB containing `NaN` values in `crop.width` and `crop.height`
+- `ImageSequenceItem` was using `crop` dimensions directly without validation
+- State rehydration from IndexedDB didn't sanitize numeric properties
+
+**Files Affected**:
+
+- `/app/components/editor/player/remotion/Player.tsx` - Error originated here
+- `/app/components/editor/player/remotion/sequence/items/image-sequence-item.tsx` - Direct usage of crop values
+- `/app/store/slices/projectSlice.ts` - State rehydration
+- `/app/utils/utils.ts` - Sanitization utility
+
+**Solution Implemented (Defense in Depth)**:
+
+1. **Created `sanitizeMediaFile` utility** (`app/utils/utils.ts`)
+
+   - Validates all numeric properties: width, height, x, y, opacity, zIndex, rotation
+   - Validates crop object properties: x, y, width, height
+   - Provides safe fallback values (width=1920, height=1080, etc.)
+
+2. **Updated `rehydrate` reducer** (`app/store/slices/projectSlice.ts`)
+
+   - Sanitizes all mediaFiles when restoring state from IndexedDB
+   - Prevents corrupted data from propagating into the app
+
+3. **Enhanced `ImageSequenceItem` validation** (`image-sequence-item.tsx`)
+   - Added `safeCropWidth`, `safeCropHeight`, `safeCropX`, `safeCropY` variables
+   - Validates crop dimensions before using in style properties
+   - Falls back to safe values if NaN detected
+
+**Status**: ✅ Resolved - Multiple layers of protection prevent NaN errors
 
 ---
 
