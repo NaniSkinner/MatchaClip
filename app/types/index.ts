@@ -174,6 +174,36 @@ export interface RecordingSettings {
   resolution: { width: number; height: number };
 }
 
+// ===== AUDIO & WEBCAM TYPES (Phase 2) =====
+
+export interface AudioDevice {
+  deviceId: string;
+  label: string;
+  kind: "audioinput" | "audiooutput";
+  groupId: string;
+}
+
+export interface CameraDevice {
+  deviceId: string;
+  label: string;
+  facingMode?: "user" | "environment";
+}
+
+export interface AudioConfiguration {
+  microphoneEnabled: boolean;
+  systemAudioEnabled: boolean;
+  microphoneGain: number; // 0-100
+  systemAudioGain: number; // 0-100
+  selectedMicId: string | null;
+}
+
+export interface WebcamConfiguration {
+  enabled: boolean;
+  selectedCameraId: string | null;
+  resolution: { width: number; height: number };
+  frameRate: number;
+}
+
 export interface RecordingState {
   // UI State
   isPanelOpen: boolean;
@@ -204,4 +234,15 @@ export interface RecordingState {
 
   // Error handling
   error: string | null;
+
+  // Audio Configuration (Phase 2)
+  audioConfig: AudioConfiguration;
+  availableMicrophones: AudioDevice[];
+  microphoneStream: MediaStream | null;
+  systemAudioStream: MediaStream | null;
+
+  // Webcam Configuration (Phase 2)
+  webcamConfig: WebcamConfiguration;
+  availableCameras: CameraDevice[];
+  webcamStream: MediaStream | null;
 }

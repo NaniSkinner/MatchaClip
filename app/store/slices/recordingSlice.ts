@@ -4,6 +4,10 @@ import {
   RecordingMode,
   ScreenSource,
   RecordingMetadata,
+  AudioConfiguration,
+  AudioDevice,
+  CameraDevice,
+  WebcamConfiguration,
 } from "../../types";
 
 const initialState: RecordingState = {
@@ -31,6 +35,28 @@ const initialState: RecordingState = {
 
   // Error handling
   error: null,
+
+  // Audio Configuration (Phase 2)
+  audioConfig: {
+    microphoneEnabled: false,
+    systemAudioEnabled: false,
+    microphoneGain: 100, // 100%
+    systemAudioGain: 100, // 100%
+    selectedMicId: null,
+  },
+  availableMicrophones: [],
+  microphoneStream: null,
+  systemAudioStream: null,
+
+  // Webcam Configuration (Phase 2)
+  webcamConfig: {
+    enabled: false,
+    selectedCameraId: null,
+    resolution: { width: 1920, height: 1080 },
+    frameRate: 30,
+  },
+  availableCameras: [],
+  webcamStream: null,
 };
 
 const recordingSlice = createSlice({
@@ -135,6 +161,78 @@ const recordingSlice = createSlice({
         recordings: state.recordings, // Preserve recordings list
       };
     },
+
+    // ===== AUDIO ACTIONS (Phase 2) =====
+
+    // Set available microphones
+    setAvailableMicrophones: (state, action: PayloadAction<AudioDevice[]>) => {
+      state.availableMicrophones = action.payload;
+
+      // Auto-select first device if none selected and devices available
+      if (
+        !state.audioConfig.selectedMicId &&
+        action.payload.length > 0 &&
+        action.payload[0]
+      ) {
+        state.audioConfig.selectedMicId = action.payload[0].deviceId;
+      }
+    },
+
+    // Update audio configuration
+    setAudioConfig: (
+      state,
+      action: PayloadAction<Partial<AudioConfiguration>>
+    ) => {
+      state.audioConfig = {
+        ...state.audioConfig,
+        ...action.payload,
+      };
+    },
+
+    // Set microphone stream
+    setMicrophoneStream: (state, action: PayloadAction<MediaStream | null>) => {
+      state.microphoneStream = action.payload;
+    },
+
+    // Set system audio stream
+    setSystemAudioStream: (
+      state,
+      action: PayloadAction<MediaStream | null>
+    ) => {
+      state.systemAudioStream = action.payload;
+    },
+
+    // ===== WEBCAM ACTIONS (Phase 2) =====
+
+    // Set available cameras
+    setAvailableCameras: (state, action: PayloadAction<CameraDevice[]>) => {
+      state.availableCameras = action.payload;
+
+      // Auto-select first camera if none selected and cameras available
+      if (
+        !state.webcamConfig.selectedCameraId &&
+        action.payload.length > 0 &&
+        action.payload[0]
+      ) {
+        state.webcamConfig.selectedCameraId = action.payload[0].deviceId;
+      }
+    },
+
+    // Update webcam configuration
+    setWebcamConfig: (
+      state,
+      action: PayloadAction<Partial<WebcamConfiguration>>
+    ) => {
+      state.webcamConfig = {
+        ...state.webcamConfig,
+        ...action.payload,
+      };
+    },
+
+    // Set webcam stream
+    setWebcamStream: (state, action: PayloadAction<MediaStream | null>) => {
+      state.webcamStream = action.payload;
+    },
   },
 });
 
@@ -158,6 +256,15 @@ export const {
   setRecordings,
   setError,
   resetRecordingState,
+  // Audio actions
+  setAvailableMicrophones,
+  setAudioConfig,
+  setMicrophoneStream,
+  setSystemAudioStream,
+  // Webcam actions
+  setAvailableCameras,
+  setWebcamConfig,
+  setWebcamStream,
 } = recordingSlice.actions;
 
 export default recordingSlice.reducer;

@@ -7,6 +7,8 @@ import {
   stopRecording,
   setCurrentScreen,
   addRecording,
+  setMicrophoneStream,
+  setSystemAudioStream,
 } from "../store/slices/recordingSlice";
 import { RecordingMetadata } from "../types";
 import {
@@ -33,12 +35,79 @@ interface UseRecordingSessionReturn {
  */
 export function useRecordingSession(): UseRecordingSessionReturn {
   const dispatch = useAppDispatch();
-  const { startTime } = useAppSelector((state) => state.recording);
+  const { startTime, audioConfig } = useAppSelector((state) => state.recording);
   const [isRecording, setIsRecording] = useState(false);
   const [error, setErrorState] = useState<string | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const micStreamRef = useRef<MediaStream | null>(null);
+  const systemAudioStreamRef = useRef<MediaStream | null>(null);
+
+  /**
+   * Combine video and audio streams using Web Audio API
+   */
+  const combineStreams = async (
+    videoStream: MediaStream,
+    micStream: MediaStream | null,
+    systemStream: MediaStream | null
+  ): Promise<MediaStream> => {
+    // Get video track
+    const videoTrack = videoStream.getVideoTracks()[0];
+
+    // If no audio streams, just return video
+    if (!micStream && !systemStream) {
+      return new MediaStream([videoTrack]);
+    }
+
+    // If only one audio source, combine it directly
+    if (micStream && !systemStream) {
+      const audioTrack = micStream.getAudioTracks()[0];
+      return new MediaStream([videoTrack, audioTrack]);
+    }
+
+    if (!micStream && systemStream) {
+      const audioTrack = systemStream.getAudioTracks()[0];
+      return new MediaStream([videoTrack, audioTrack]);
+    }
+
+    // Mix both audio sources using Web Audio API
+    try {
+      const audioContext = new AudioContext();
+      audioContextRef.current = audioContext;
+
+      const destination = audioContext.createMediaStreamDestination();
+
+      // Add microphone with gain control
+      if (micStream) {
+        const micSource = audioContext.createMediaStreamSource(micStream);
+        const micGain = audioContext.createGain();
+        micGain.gain.value = audioConfig.microphoneGain / 100;
+        micSource.connect(micGain);
+        micGain.connect(destination);
+      }
+
+      // Add system audio with gain control
+      if (systemStream) {
+        const sysSource = audioContext.createMediaStreamSource(systemStream);
+        const sysGain = audioContext.createGain();
+        sysGain.gain.value = audioConfig.systemAudioGain / 100;
+        sysSource.connect(sysGain);
+        sysGain.connect(destination);
+      }
+
+      // Combine video with mixed audio
+      const mixedAudioTrack = destination.stream.getAudioTracks()[0];
+      return new MediaStream([videoTrack, mixedAudioTrack]);
+    } catch (err) {
+      console.error("[Recording] Failed to mix audio:", err);
+      // Fallback: just use microphone if mixing fails
+      const fallbackAudioTrack =
+        micStream?.getAudioTracks()[0] || systemStream?.getAudioTracks()[0];
+      return new MediaStream([videoTrack, fallbackAudioTrack!]);
+    }
+  };
 
   /**
    * Start recording from a specific source
@@ -54,10 +123,18 @@ export function useRecordingSession(): UseRecordingSessionReturn {
           throw new Error("No supported video codec found");
         }
 
-        // Get media stream from Electron using getUserMedia
+        // Get screen stream from Electron using getUserMedia
         // The sourceId comes from desktopCapturer
+        // Only request system audio if enabled (macOS feature)
         const constraints: any = {
-          audio: false, // Phase 1: no audio
+          audio: audioConfig.systemAudioEnabled
+            ? {
+                mandatory: {
+                  chromeMediaSource: "desktop",
+                  chromeMediaSourceId: sourceId,
+                },
+              }
+            : false,
           video: {
             mandatory: {
               chromeMediaSource: "desktop",
@@ -72,8 +149,48 @@ export function useRecordingSession(): UseRecordingSessionReturn {
           },
         };
 
-        const stream = await navigator.mediaDevices.getUserMedia(constraints);
-        mediaStreamRef.current = stream;
+        const screenStream = await navigator.mediaDevices.getUserMedia(
+          constraints
+        );
+
+        // Extract system audio track from screen capture (macOS)
+        const systemAudioTrack = screenStream.getAudioTracks()[0];
+        if (systemAudioTrack && audioConfig.systemAudioEnabled) {
+          const systemStream = new MediaStream([systemAudioTrack]);
+          systemAudioStreamRef.current = systemStream;
+          dispatch(setSystemAudioStream(systemStream));
+          console.log("[Recording] System audio track captured");
+        }
+
+        // Get microphone stream if enabled
+        let micStream: MediaStream | null = null;
+        if (audioConfig.microphoneEnabled && audioConfig.selectedMicId) {
+          try {
+            micStream = await navigator.mediaDevices.getUserMedia({
+              audio: {
+                deviceId: audioConfig.selectedMicId,
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: false,
+              },
+            });
+            micStreamRef.current = micStream;
+            dispatch(setMicrophoneStream(micStream));
+            console.log("[Recording] Microphone stream captured");
+          } catch (err) {
+            console.error("[Recording] Failed to capture microphone:", err);
+            toast.error("Failed to capture microphone");
+          }
+        }
+
+        // Combine video and audio streams
+        const combinedStream = await combineStreams(
+          screenStream,
+          micStream,
+          systemAudioTrack ? systemAudioStreamRef.current : null
+        );
+
+        mediaStreamRef.current = combinedStream;
 
         // Create MediaRecorder
         const options = {
@@ -81,7 +198,7 @@ export function useRecordingSession(): UseRecordingSessionReturn {
           videoBitsPerSecond: RECORDING_CONSTANTS.VIDEO_BITRATE,
         };
 
-        const recorder = new MediaRecorder(stream, options);
+        const recorder = new MediaRecorder(combinedStream, options);
         mediaRecorderRef.current = recorder;
         chunksRef.current = [];
 
@@ -132,7 +249,7 @@ export function useRecordingSession(): UseRecordingSessionReturn {
         throw err;
       }
     },
-    [dispatch]
+    [dispatch, audioConfig]
   );
 
   /**
@@ -238,6 +355,26 @@ export function useRecordingSession(): UseRecordingSessionReturn {
     if (mediaStreamRef.current) {
       mediaStreamRef.current.getTracks().forEach((track) => track.stop());
       mediaStreamRef.current = null;
+    }
+
+    // Stop microphone stream
+    if (micStreamRef.current) {
+      micStreamRef.current.getTracks().forEach((track) => track.stop());
+      micStreamRef.current = null;
+      dispatch(setMicrophoneStream(null));
+    }
+
+    // Stop system audio stream
+    if (systemAudioStreamRef.current) {
+      systemAudioStreamRef.current.getTracks().forEach((track) => track.stop());
+      systemAudioStreamRef.current = null;
+      dispatch(setSystemAudioStream(null));
+    }
+
+    // Close audio context
+    if (audioContextRef.current && audioContextRef.current.state !== "closed") {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
     }
 
     // Clear recorder

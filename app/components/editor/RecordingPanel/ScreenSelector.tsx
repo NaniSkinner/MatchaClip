@@ -11,6 +11,7 @@ import {
 } from "../../../store/slices/recordingSlice";
 import { ScreenSource } from "../../../types";
 import Image from "next/image";
+import AudioSourceSelector from "./AudioSourceSelector";
 
 /**
  * ScreenSelector Component
@@ -183,6 +184,11 @@ export default function ScreenSelector() {
             </div>
           </button>
         ))}
+      </div>
+
+      {/* Audio Source Selection */}
+      <div className="mt-6 pt-6 border-t border-gray-800">
+        <AudioSourceSelector />
       </div>
 
       {/* Action Buttons */}
