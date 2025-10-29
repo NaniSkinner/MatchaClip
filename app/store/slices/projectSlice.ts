@@ -46,9 +46,17 @@ const calculateTotalDuration = (
   mediaFiles: MediaFile[],
   textElements: TextElement[]
 ): number => {
-  const mediaDurations = mediaFiles.map((v) => v.positionEnd);
-  const textDurations = textElements.map((v) => v.positionEnd);
-  return Math.max(0, ...mediaDurations, ...textDurations);
+  // Filter out invalid values and only include valid numbers
+  const mediaDurations = mediaFiles
+    .map((v) => v.positionEnd)
+    .filter((d) => typeof d === "number" && !isNaN(d) && isFinite(d));
+  const textDurations = textElements
+    .map((v) => v.positionEnd)
+    .filter((d) => typeof d === "number" && !isNaN(d) && isFinite(d));
+
+  // Calculate max duration, defaulting to 1 if no valid durations exist
+  const maxDuration = Math.max(0, ...mediaDurations, ...textDurations);
+  return maxDuration > 0 ? maxDuration : 1;
 };
 
 const projectStateSlice = createSlice({

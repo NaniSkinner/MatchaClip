@@ -65,6 +65,11 @@ export const ImageSequenceItem: React.FC<ImageSequenceItemProps> = ({
   const safeCropX = typeof crop.x === "number" && !isNaN(crop.x) ? crop.x : 0;
   const safeCropY = typeof crop.y === "number" && !isNaN(crop.y) ? crop.y : 0;
 
+  // Don't render if there's no valid src
+  if (!item.src) {
+    return null;
+  }
+
   return (
     <Sequence
       key={item.id}
@@ -106,7 +111,7 @@ export const ImageSequenceItem: React.FC<ImageSequenceItemProps> = ({
               zIndex: item.zIndex || 0,
             }}
             data-id={item.id}
-            src={item.src || ""}
+            src={item.src}
           />
         </div>
       </AbsoluteFill>

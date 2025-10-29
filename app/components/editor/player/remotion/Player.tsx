@@ -96,12 +96,16 @@ export const PreviewPlayer = () => {
     return () => clearInterval(intervalId);
   }, [isPlaying, outPoint, fps, dispatch]);
 
+  // Validate duration to prevent NaN errors in Remotion Player
+  const safeDuration = isValidNumber(duration) && duration > 0 ? duration : 1;
+  const safeDurationInFrames = Math.max(1, Math.floor(safeDuration * fps) + 1);
+
   return (
     <Player
       ref={playerRef}
       component={Composition}
       inputProps={{}}
-      durationInFrames={Math.max(1, Math.floor(duration * fps) + 1)}
+      durationInFrames={safeDurationInFrames}
       compositionWidth={1920}
       compositionHeight={1080}
       fps={fps}

@@ -26,6 +26,7 @@ export default function TrimMarker({
   isActive,
   timelineZoom,
 }: TrimMarkerProps) {
+  // All hooks MUST be called unconditionally at the top
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
   const markerRef = useRef<HTMLDivElement>(null);
@@ -44,12 +45,6 @@ export default function TrimMarker({
     clip,
     timelineZoom
   );
-
-  // If mapping failed, don't render
-  if (position === null) {
-    console.error(`Failed to map ${type} marker for clip ${clip.id}`);
-    return null;
-  }
 
   useEffect(() => {
     if (!isDragging) return;
@@ -116,7 +111,14 @@ export default function TrimMarker({
     e.stopPropagation();
   };
 
+  // Conditional rendering MUST come after all hooks
   if (!isActive) return null;
+
+  // If mapping failed, don't render
+  if (position === null) {
+    console.error(`Failed to map ${type} marker for clip ${clip.id}`);
+    return null;
+  }
 
   return (
     <div

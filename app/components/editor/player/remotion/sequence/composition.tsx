@@ -13,18 +13,19 @@ const Composition = () => {
 
   const fps = 30; // Move before useEffect so it's accessible
   const THRESHOLD = 0.1; // Minimum change to trigger dispatch (in seconds)
-  const previousTime = useRef(0); // Store previous time to track changes
+  const lastDispatchedTime = useRef(0); // Store last dispatched time
 
   useEffect(() => {
     const currentTimeInSeconds = frame / fps;
 
-    // Check if change exceeds threshold
-    if (Math.abs(currentTimeInSeconds - previousTime.current) > THRESHOLD) {
+    // Only dispatch if change exceeds threshold
+    if (
+      Math.abs(currentTimeInSeconds - lastDispatchedTime.current) > THRESHOLD
+    ) {
       dispatch(setCurrentTime(currentTimeInSeconds));
-      // Update previousTime to prevent infinite loop
-      previousTime.current = currentTimeInSeconds;
+      lastDispatchedTime.current = currentTimeInSeconds;
     }
-  }, [frame, dispatch]);
+  }, [frame, dispatch, fps]);
   return (
     <>
       {mediaFiles.map((item: MediaFile, index: number) => {

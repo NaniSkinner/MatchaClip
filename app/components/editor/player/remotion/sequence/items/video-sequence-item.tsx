@@ -60,6 +60,11 @@ export const VideoSequenceItem: React.FC<VideoSequenceItemProps> = ({
     to: item.endTime / playbackRate,
   };
 
+  // Don't render if there's no valid src
+  if (!item.src) {
+    return null;
+  }
+
   return (
     <Sequence
       key={item.id}
@@ -96,7 +101,7 @@ export const VideoSequenceItem: React.FC<VideoSequenceItemProps> = ({
             startFrom={trim.from * fps}
             endAt={trim.to * fps + REMOTION_SAFE_FRAME}
             playbackRate={playbackRate}
-            src={item.src || ""}
+            src={item.src}
             volume={item.volume / 100 || 100}
             style={{
               pointerEvents: "none",

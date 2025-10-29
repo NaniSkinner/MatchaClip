@@ -1,11 +1,11 @@
-import './globals.css'
-import type { Metadata } from 'next'
+import "./globals.css";
+import type { Metadata } from "next";
 import { Inter, Roboto_Mono } from "next/font/google";
-import { Providers } from './providers'
+import { Providers } from "./providers";
 import Header from "./components/header/Header";
 import Footer from "./components/footer/Footer";
-import { Toaster } from 'react-hot-toast';
-import { Analytics } from "@vercel/analytics/next"
+import { Toaster } from "react-hot-toast";
+import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Inter({
   variable: "--font-geist-sans",
@@ -18,14 +18,15 @@ const geistMono = Roboto_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'ClipForge - Desktop Video Editor',
-  description: 'A powerful cross-platform desktop video editor built with Electron, Next.js, and React. Create, edit, and export professional videos with real-time preview and FFmpeg rendering.',
-}
+  title: "ClipForge - Desktop Video Editor",
+  description:
+    "A powerful cross-platform desktop video editor built with Electron, Next.js, and React. Create, edit, and export professional videos with real-time preview and FFmpeg rendering.",
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
@@ -35,13 +36,13 @@ export default function RootLayout({
       >
         <Providers>
           <Header />
-          <main className="flex-grow">
+          <main className="grow">
             <Toaster
               toastOptions={{
                 style: {
-                  borderRadius: '10px',
-                  background: '#333',
-                  color: '#fff',
+                  borderRadius: "10px",
+                  background: "#333",
+                  color: "#fff",
                 },
               }}
             />
@@ -52,5 +53,5 @@ export default function RootLayout({
         </Providers>
       </body>
     </html>
-  )
+  );
 }

@@ -108,7 +108,7 @@ export default function Page() {
       <div>
         <br />
         <br />
-        <h2 className="mx-auto max-w-4xl text-center font-display text-5xl font-medium tracking-tight text-white-900 sm:text-4xl">
+        <h2 className="mx-auto max-w-4xl text-center font-display text-5xl font-medium tracking-tight text-white sm:text-4xl">
           <span className="inline-block">Projects</span>
         </h2>
         {isLoading ? (

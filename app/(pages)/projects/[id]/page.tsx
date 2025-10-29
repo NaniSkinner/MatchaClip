@@ -72,33 +72,79 @@ export default function ProjectClient({
       if (currentProjectId) {
         const project = await getProject(currentProjectId);
         if (project) {
-          dispatch(rehydrate(project));
+          // Strip out old blob URLs from the loaded project before rehydrating
+          // Blob URLs are session-specific and invalid after reload
+          const projectWithoutBlobUrls = {
+            ...project,
+            mediaFiles: project.mediaFiles.map((media: MediaFile) => {
+              const { src, ...mediaWithoutSrc } = media;
+              return mediaWithoutSrc;
+            }),
+          };
 
-          dispatch(
-            setMediaFiles(
-              await Promise.all(
-                project.mediaFiles.map(async (media: MediaFile) => {
-                  const file = await getFile(media.fileId);
-                  return { ...media, src: URL.createObjectURL(file) };
-                })
-              )
-            )
+          dispatch(rehydrate(projectWithoutBlobUrls));
+
+          // Create fresh blob URLs for all media files
+          const mediaFilesWithBlobUrls = await Promise.all(
+            project.mediaFiles.map(async (media: MediaFile) => {
+              try {
+                const file = await getFile(media.fileId);
+                if (!file) {
+                  console.error(`File not found for media: ${media.fileName}`);
+                  toast.error(`Media file "${media.fileName}" is missing`);
+                  return null;
+                }
+                // Create a fresh blob URL for this file
+                const blobUrl = URL.createObjectURL(file);
+                return { ...media, src: blobUrl };
+              } catch (error) {
+                console.error(
+                  `Error loading media file ${media.fileName}:`,
+                  error
+                );
+                toast.error(`Failed to load "${media.fileName}"`);
+                return null;
+              }
+            })
           );
+
+          // Filter out any null entries (failed loads)
+          const validMediaFiles = mediaFilesWithBlobUrls.filter(
+            (media): media is MediaFile => media !== null
+          );
+          dispatch(setMediaFiles(validMediaFiles));
         }
       }
     };
     loadProject();
+
+    // Cleanup: revoke blob URLs when component unmounts
+    return () => {
+      // Note: We don't revoke URLs here because they're needed throughout the session
+      // They'll be cleaned up when the page/tab is closed
+    };
   }, [dispatch, currentProjectId]);
 
   // save
   useEffect(() => {
     const saveProject = async () => {
       if (!projectState || projectState.id != currentProjectId) return;
-      await storeProject(projectState);
+
+      // Strip out blob URLs before saving to IndexedDB
+      // Blob URLs are session-specific and must be recreated on load
+      const projectToSave = {
+        ...projectState,
+        mediaFiles: projectState.mediaFiles.map((media) => {
+          const { src, ...mediaWithoutSrc } = media;
+          return mediaWithoutSrc;
+        }),
+      };
+
+      await storeProject(projectToSave);
       dispatch(updateProject(projectState));
     };
     saveProject();
-  }, [projectState, dispatch]);
+  }, [projectState, dispatch, currentProjectId]);
 
   const handleFocus = (section: "media" | "text" | "export") => {
     dispatch(setActiveSection(section));

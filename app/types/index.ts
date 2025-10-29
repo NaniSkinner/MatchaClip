@@ -121,11 +121,21 @@ export interface ProjectState {
 
 export const mimeToExt = {
   "video/mp4": "mp4",
+  "video/quicktime": "mov",
+  "video/x-quicktime": "mov",
+  "video/webm": "webm",
+  "video/x-msvideo": "avi",
+  "video/x-matroska": "mkv",
   "audio/mpeg": "mp3",
+  "audio/mp3": "mp3",
   "audio/wav": "wav",
+  "audio/x-wav": "wav",
+  "audio/aac": "aac",
+  "audio/mp4": "m4a",
   "image/jpeg": "jpg",
+  "image/jpg": "jpg",
   "image/png": "png",
   "image/webp": "webp",
-  "video/webm": "webm",
+  "image/gif": "gif",
   // TODO: Add more as needed
 };
