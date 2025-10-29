@@ -46,7 +46,28 @@ contextBridge.exposeInMainWorld("electronAPI", {
   removeExportProgressListener: () => {
     ipcRenderer.removeAllListeners("export-progress");
   },
+
+  // Recording API
+  recording: {
+    getScreenSources: () => ipcRenderer.invoke("recording:get-screen-sources"),
+    checkPermission: () => ipcRenderer.invoke("recording:check-permission"),
+    requestPermission: () => ipcRenderer.invoke("recording:request-permission"),
+  },
 });
+
+// Recording API types
+interface ElectronScreenSource {
+  id: string;
+  name: string;
+  thumbnail: string;
+  type: "screen" | "window";
+}
+
+interface PermissionStatus {
+  granted: boolean;
+  canRequest: boolean;
+  message?: string;
+}
 
 // Type definitions for the exposed API
 export interface ElectronAPI {
@@ -57,6 +78,11 @@ export interface ElectronAPI {
   checkFFmpeg: () => Promise<{ available: boolean; error?: string }>;
   onExportProgress: (callback: (progress: ExportProgress) => void) => void;
   removeExportProgressListener: () => void;
+  recording: {
+    getScreenSources: () => Promise<ElectronScreenSource[]>;
+    checkPermission: () => Promise<PermissionStatus>;
+    requestPermission: () => Promise<PermissionStatus>;
+  };
 }
 
 declare global {

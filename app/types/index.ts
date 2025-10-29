@@ -139,3 +139,69 @@ export const mimeToExt = {
   "image/gif": "gif",
   // TODO: Add more as needed
 };
+
+// ===== RECORDING TYPES =====
+
+export enum RecordingMode {
+  SCREEN = "screen",
+  WEBCAM = "webcam",
+  PIP = "pip",
+}
+
+export interface ScreenSource {
+  id: string;
+  name: string;
+  thumbnailUrl: string;
+  type: "screen" | "window";
+}
+
+export interface RecordingMetadata {
+  id: string;
+  name: string;
+  type: "screen" | "webcam" | "pip";
+  duration: number;
+  size: number;
+  createdAt: number;
+  thumbnailUrl?: string;
+  resolution: { width: number; height: number };
+  fps: number;
+}
+
+export interface RecordingSettings {
+  maxDuration: number; // milliseconds (300000 = 5 min)
+  fps: number; // 30
+  videoBitsPerSecond: number;
+  resolution: { width: number; height: number };
+}
+
+export interface RecordingState {
+  // UI State
+  isPanelOpen: boolean;
+  currentScreen:
+    | "mode-selector"
+    | "screen-selector"
+    | "countdown"
+    | "recording"
+    | "success";
+
+  // Recording State
+  isRecording: boolean;
+  isPaused: boolean;
+  mode: RecordingMode | null;
+  selectedSource: ScreenSource | null;
+  availableSources: ScreenSource[];
+
+  // Timing
+  startTime: number | null;
+  elapsedTime: number; // milliseconds
+
+  // Media
+  mediaRecorder: MediaRecorder | null;
+  recordedChunks: Blob[];
+
+  // Storage
+  recordings: RecordingMetadata[];
+
+  // Error handling
+  error: string | null;
+}

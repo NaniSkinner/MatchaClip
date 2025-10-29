@@ -9,6 +9,14 @@ import {
   writeTempFile,
   cleanupTempFiles,
 } from "./utils/ffmpeg-native";
+import {
+  getScreenSources,
+  validateScreenSource,
+} from "./recording/screen-capture";
+import {
+  checkScreenRecordingPermission,
+  requestScreenRecordingPermission,
+} from "./recording/permissions";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -264,6 +272,47 @@ function setupIpcHandlers() {
       return { available: true };
     } catch (error) {
       return { available: false, error: String(error) };
+    }
+  });
+
+  // ===== RECORDING IPC HANDLERS =====
+
+  // IPC Handler: Get screen sources
+  ipcMain.handle("recording:get-screen-sources", async () => {
+    try {
+      console.log("[IPC] Getting screen sources...");
+      const sources = await getScreenSources();
+      console.log(`[IPC] Returning ${sources.length} sources`);
+      return sources;
+    } catch (error) {
+      console.error("[IPC] Error getting screen sources:", error);
+      throw error;
+    }
+  });
+
+  // IPC Handler: Check screen recording permission
+  ipcMain.handle("recording:check-permission", async () => {
+    try {
+      console.log("[IPC] Checking screen recording permission...");
+      const status = await checkScreenRecordingPermission();
+      console.log("[IPC] Permission status:", status);
+      return status;
+    } catch (error) {
+      console.error("[IPC] Error checking permission:", error);
+      throw error;
+    }
+  });
+
+  // IPC Handler: Request screen recording permission
+  ipcMain.handle("recording:request-permission", async () => {
+    try {
+      console.log("[IPC] Requesting screen recording permission...");
+      const status = await requestScreenRecordingPermission();
+      console.log("[IPC] Permission status:", status);
+      return status;
+    } catch (error) {
+      console.error("[IPC] Error requesting permission:", error);
+      throw error;
     }
   });
 }

@@ -22,18 +22,21 @@ import LibraryButton from "@/app/components/editor/AssetsPanel/SidebarButtons/Li
 import ExportButton from "@/app/components/editor/AssetsPanel/SidebarButtons/ExportButton";
 import HomeButton from "@/app/components/editor/AssetsPanel/SidebarButtons/HomeButton";
 import ShortcutsButton from "@/app/components/editor/AssetsPanel/SidebarButtons/ShortcutsButton";
+import RecordButton from "@/app/components/editor/AssetsPanel/SidebarButtons/RecordButton";
 import MediaProperties from "../../../components/editor/PropertiesSection/MediaProperties";
 import TextProperties from "../../../components/editor/PropertiesSection/TextProperties";
 import { Timeline } from "../../../components/editor/timeline/Timline";
 import { PreviewPlayer } from "../../../components/editor/player/remotion/Player";
 import { MediaFile } from "@/app/types";
 import ExportList from "../../../components/editor/AssetsPanel/tools-section/ExportList";
+import RecordingsList from "../../../components/editor/AssetsPanel/tools-section/RecordingsList";
 import Image from "next/image";
 import ProjectName from "../../../components/editor/player/ProjectName";
 import { storeFile } from "@/app/store";
 import toast from "react-hot-toast";
 import { setFilesID } from "@/app/store/slices/projectSlice";
 import { Video, Music, Image as ImageIcon, Type } from "lucide-react";
+import RecordingPanel from "../../../components/editor/RecordingPanel/RecordingPanel";
 
 export default function ProjectClient({
   params,
@@ -289,6 +292,7 @@ export default function ProjectClient({
         <div className="w-[50px] border-r border-[#3F3F3F] bg-bg-tertiary overflow-y-auto p-1.5">
           <div className="flex flex-col space-y-1.5">
             <HomeButton />
+            <RecordButton />
             <TextButton onClick={() => handleFocus("text")} />
             <LibraryButton onClick={() => handleFocus("media")} />
             <ExportButton onClick={() => handleFocus("export")} />
@@ -305,6 +309,14 @@ export default function ProjectClient({
                 <AddMedia />
               </h2>
               <MediaList />
+
+              {/* Recordings Section */}
+              <div className="mt-6">
+                <h2 className="text-sm font-semibold mb-3 text-gray-200">
+                  Screen Recordings
+                </h2>
+                <RecordingsList />
+              </div>
             </div>
           )}
           {activeSection === "text" && (
@@ -376,6 +388,9 @@ export default function ProjectClient({
         </div>
         <Timeline />
       </div>
+
+      {/* Recording Panel */}
+      <RecordingPanel />
     </div>
   );
 }

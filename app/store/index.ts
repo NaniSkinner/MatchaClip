@@ -4,6 +4,7 @@ import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
 import { openDB } from "idb";
 import projectStateReducer from "./slices/projectSlice";
 import projectsReducer from "./slices/projectsSlice";
+import recordingReducer from "./slices/recordingSlice";
 import toast from "react-hot-toast";
 
 // Create IndexedDB database for files and projects
@@ -192,6 +193,7 @@ export const store = configureStore({
   reducer: {
     projectState: projectStateReducer,
     projects: projectsReducer,
+    recording: recordingReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

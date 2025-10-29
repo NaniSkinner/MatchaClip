@@ -10,7 +10,9 @@ import {
   setOutPoint,
   clearInOutPoints,
 } from "@/app/store/slices/projectSlice";
+import { openPanel } from "@/app/store/slices/recordingSlice";
 import { useDispatch } from "react-redux";
+import { useRecordingSession } from "@/app/hooks/useRecordingSession";
 import toast from "react-hot-toast";
 
 interface GlobalKeyHandlerProps {
@@ -25,7 +27,9 @@ const GlobalKeyHandler = ({
   handleDelete,
 }: GlobalKeyHandlerProps) => {
   const projectState = useAppSelector((state) => state.projectState);
+  const recordingState = useAppSelector((state) => state.recording);
   const dispatch = useDispatch();
+  const { stopRecordingAndSave } = useRecordingSession();
 
   const { duration } = projectState;
 
@@ -65,6 +69,25 @@ const GlobalKeyHandler = ({
         target.isContentEditable;
 
       if (isTyping) return;
+
+      // Recording shortcuts (Cmd/Ctrl + Shift + R to open panel)
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.code === "KeyR") {
+        e.preventDefault();
+        dispatch(openPanel());
+        toast.success("Recording panel opened");
+        return;
+      }
+
+      // Stop recording (Cmd/Ctrl + S when recording)
+      if (
+        (e.metaKey || e.ctrlKey) &&
+        e.code === "KeyS" &&
+        recordingState.isRecording
+      ) {
+        e.preventDefault();
+        stopRecordingAndSave();
+        return;
+      }
 
       switch (e.code) {
         case "Space":
