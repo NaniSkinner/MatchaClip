@@ -1,5 +1,6 @@
 "use client";
 import { Square } from "lucide-react";
+import { useEffect, useRef } from "react";
 import { useAppSelector } from "../../../store";
 import RecordingTimer from "./RecordingTimer";
 import { VUMeter } from "./VUMeter";
@@ -18,10 +19,42 @@ export default function RecordingControls({ onStop }: RecordingControlsProps) {
     isRecording,
     startTime,
     selectedSource,
+    mode,
+    webcamConfig,
+    availableCameras,
     audioConfig,
     microphoneStream,
     systemAudioStream,
+    webcamStream,
   } = useAppSelector((state) => state.recording);
+
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Get the current camera name for display
+  const currentCamera = availableCameras.find(
+    (cam) => cam.deviceId === webcamConfig.selectedCameraId
+  );
+
+  // Set up webcam preview when in webcam recording mode
+  useEffect(() => {
+    if (mode === "webcam" && webcamStream && videoRef.current) {
+      console.log("[RecordingControls] Setting up webcam preview");
+      videoRef.current.srcObject = webcamStream;
+      videoRef.current.play().catch((err) => {
+        console.error(
+          "[RecordingControls] Failed to play webcam preview:",
+          err
+        );
+      });
+    }
+
+    return () => {
+      // Don't stop the stream - it's being used for recording
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+    };
+  }, [mode, webcamStream]);
 
   return (
     <div className="space-y-6">
@@ -32,14 +65,47 @@ export default function RecordingControls({ onStop }: RecordingControlsProps) {
         <span className="text-sm text-gray-400">Recording...</span>
       </div>
 
-      {/* Source Info */}
-      {selectedSource && (
+      {/* Source Info - Screen Recording */}
+      {mode === "screen" && selectedSource && (
         <div className="p-3 bg-gray-800/50 rounded-lg">
           <p className="text-xs text-gray-500 mb-1">Recording Source</p>
           <p className="text-sm text-white truncate">{selectedSource.name}</p>
           <p className="text-xs text-gray-500 mt-1 uppercase">
             {selectedSource.type}
           </p>
+        </div>
+      )}
+
+      {/* Source Info - Webcam Recording */}
+      {mode === "webcam" && currentCamera && (
+        <div className="p-3 bg-gray-800/50 rounded-lg">
+          <p className="text-xs text-gray-500 mb-1">Recording Source</p>
+          <p className="text-sm text-white truncate">{currentCamera.label}</p>
+          <p className="text-xs text-gray-500 mt-1">
+            {webcamConfig.resolution.width}×{webcamConfig.resolution.height} @{" "}
+            {webcamConfig.frameRate}fps
+          </p>
+        </div>
+      )}
+
+      {/* Webcam Live Preview (during recording) */}
+      {mode === "webcam" && webcamStream && (
+        <div className="space-y-2">
+          <p className="text-xs text-gray-500">Live Preview</p>
+          <div className="relative aspect-video bg-black rounded-lg overflow-hidden border border-gray-700">
+            <video
+              ref={videoRef}
+              className="w-full h-full object-cover"
+              autoPlay
+              playsInline
+              muted
+            />
+            {/* Recording indicator overlay */}
+            <div className="absolute top-2 left-2 flex items-center gap-2 px-2 py-1 bg-red-600/90 rounded text-xs font-medium text-white">
+              <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+              REC
+            </div>
+          </div>
         </div>
       )}
 

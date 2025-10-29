@@ -20,8 +20,14 @@ import { saveRecording } from "../lib/recording-storage";
 import { v4 as uuidv4 } from "uuid";
 import toast from "react-hot-toast";
 
+interface RecordingStartOptions {
+  sourceId?: string; // For screen recording (Electron desktopCapturer)
+  mode: "screen" | "webcam";
+  webcamStream?: MediaStream | null; // For webcam recording
+}
+
 interface UseRecordingSessionReturn {
-  startRecording: (sourceId: string) => Promise<void>;
+  startRecording: (options: RecordingStartOptions) => Promise<void>;
   stopRecordingAndSave: () => Promise<RecordingMetadata | null>;
   cancelRecording: () => void;
   isRecording: boolean;
@@ -31,11 +37,16 @@ interface UseRecordingSessionReturn {
 /**
  * useRecordingSession Hook
  *
- * Manages the MediaRecorder lifecycle for screen recording
+ * Manages the MediaRecorder lifecycle for screen and webcam recording
  */
 export function useRecordingSession(): UseRecordingSessionReturn {
   const dispatch = useAppDispatch();
-  const { startTime, audioConfig } = useAppSelector((state) => state.recording);
+  const {
+    startTime,
+    audioConfig,
+    mode: recordingMode,
+    webcamConfig,
+  } = useAppSelector((state) => state.recording);
   const [isRecording, setIsRecording] = useState(false);
   const [error, setErrorState] = useState<string | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -110,12 +121,15 @@ export function useRecordingSession(): UseRecordingSessionReturn {
   };
 
   /**
-   * Start recording from a specific source
+   * Start recording from a specific source (screen or webcam)
    */
   const startRecording = useCallback(
-    async (sourceId: string) => {
+    async (options: RecordingStartOptions) => {
       try {
         setErrorState(null);
+        const { mode, sourceId, webcamStream } = options;
+
+        console.log(`[Recording] Starting ${mode} recording...`);
 
         // Get the best supported codec
         const mimeType = getBestSupportedCodec();
@@ -123,43 +137,70 @@ export function useRecordingSession(): UseRecordingSessionReturn {
           throw new Error("No supported video codec found");
         }
 
-        // Get screen stream from Electron using getUserMedia
-        // The sourceId comes from desktopCapturer
-        // Only request system audio if enabled (macOS feature)
-        const constraints: any = {
-          audio: audioConfig.systemAudioEnabled
-            ? {
-                mandatory: {
-                  chromeMediaSource: "desktop",
-                  chromeMediaSourceId: sourceId,
-                },
-              }
-            : false,
-          video: {
-            mandatory: {
-              chromeMediaSource: "desktop",
-              chromeMediaSourceId: sourceId,
-              minWidth: RECORDING_CONSTANTS.DEFAULT_RESOLUTION.width,
-              maxWidth: RECORDING_CONSTANTS.DEFAULT_RESOLUTION.width,
-              minHeight: RECORDING_CONSTANTS.DEFAULT_RESOLUTION.height,
-              maxHeight: RECORDING_CONSTANTS.DEFAULT_RESOLUTION.height,
-              minFrameRate: RECORDING_CONSTANTS.DEFAULT_FPS,
-              maxFrameRate: RECORDING_CONSTANTS.DEFAULT_FPS,
+        let videoStream: MediaStream;
+
+        // === SCREEN RECORDING MODE ===
+        if (mode === "screen") {
+          if (!sourceId) {
+            throw new Error("Screen recording requires a sourceId");
+          }
+
+          // Get screen stream from Electron using getUserMedia
+          // The sourceId comes from desktopCapturer
+          // Only request system audio if enabled (macOS feature)
+          const constraints: any = {
+            audio: audioConfig.systemAudioEnabled
+              ? {
+                  mandatory: {
+                    chromeMediaSource: "desktop",
+                    chromeMediaSourceId: sourceId,
+                  },
+                }
+              : false,
+            video: {
+              mandatory: {
+                chromeMediaSource: "desktop",
+                chromeMediaSourceId: sourceId,
+                minWidth: RECORDING_CONSTANTS.DEFAULT_RESOLUTION.width,
+                maxWidth: RECORDING_CONSTANTS.DEFAULT_RESOLUTION.width,
+                minHeight: RECORDING_CONSTANTS.DEFAULT_RESOLUTION.height,
+                maxHeight: RECORDING_CONSTANTS.DEFAULT_RESOLUTION.height,
+                minFrameRate: RECORDING_CONSTANTS.DEFAULT_FPS,
+                maxFrameRate: RECORDING_CONSTANTS.DEFAULT_FPS,
+              },
             },
-          },
-        };
+          };
 
-        const screenStream = await navigator.mediaDevices.getUserMedia(
-          constraints
-        );
+          videoStream = await navigator.mediaDevices.getUserMedia(constraints);
 
-        // Extract system audio track from screen capture (macOS)
-        const systemAudioTrack = screenStream.getAudioTracks()[0];
-        if (systemAudioTrack && audioConfig.systemAudioEnabled) {
-          const systemStream = new MediaStream([systemAudioTrack]);
-          systemAudioStreamRef.current = systemStream;
-          dispatch(setSystemAudioStream(systemStream));
-          console.log("[Recording] System audio track captured");
+          // Extract system audio track from screen capture (macOS)
+          const systemAudioTrack = videoStream.getAudioTracks()[0];
+          if (systemAudioTrack && audioConfig.systemAudioEnabled) {
+            const systemStream = new MediaStream([systemAudioTrack]);
+            systemAudioStreamRef.current = systemStream;
+            dispatch(setSystemAudioStream(systemStream));
+            console.log("[Recording] System audio track captured");
+          }
+        }
+        // === WEBCAM RECORDING MODE ===
+        else if (mode === "webcam") {
+          if (!webcamStream) {
+            throw new Error("Webcam recording requires a webcamStream");
+          }
+
+          console.log("[Recording] Using webcam stream from Redux");
+          videoStream = webcamStream;
+
+          // System audio doesn't make sense for webcam-only mode, but user can enable it
+          // We'll allow it but it will only work on macOS with screen capture
+          if (audioConfig.systemAudioEnabled) {
+            console.warn(
+              "[Recording] System audio enabled for webcam mode - this will not capture any audio"
+            );
+            // Could optionally capture screen audio even in webcam mode if user wants
+          }
+        } else {
+          throw new Error(`Unknown recording mode: ${mode}`);
         }
 
         // Get microphone stream if enabled
@@ -185,20 +226,22 @@ export function useRecordingSession(): UseRecordingSessionReturn {
 
         // Combine video and audio streams
         const combinedStream = await combineStreams(
-          screenStream,
+          videoStream,
           micStream,
-          systemAudioTrack ? systemAudioStreamRef.current : null
+          mode === "screen" && systemAudioStreamRef.current
+            ? systemAudioStreamRef.current
+            : null
         );
 
         mediaStreamRef.current = combinedStream;
 
         // Create MediaRecorder
-        const options = {
+        const recorderOptions = {
           mimeType,
           videoBitsPerSecond: RECORDING_CONSTANTS.VIDEO_BITRATE,
         };
 
-        const recorder = new MediaRecorder(combinedStream, options);
+        const recorder = new MediaRecorder(combinedStream, recorderOptions);
         mediaRecorderRef.current = recorder;
         chunksRef.current = [];
 
@@ -229,7 +272,10 @@ export function useRecordingSession(): UseRecordingSessionReturn {
         setIsRecording(true);
         dispatch(setMediaRecorder(recorder));
 
-        console.log("[Recording] Started with codec:", mimeType);
+        console.log(
+          `[Recording] ${mode} recording started with codec:`,
+          mimeType
+        );
         toast.success(RECORDING_MESSAGES.RECORDING_STARTED);
 
         // Auto-stop at max duration
@@ -290,15 +336,29 @@ export function useRecordingSession(): UseRecordingSessionReturn {
         // Generate metadata
         const recordingId = uuidv4();
         const now = Date.now();
+
+        // Determine recording type and resolution
+        const recordingType = recordingMode || "screen";
+        const resolution =
+          recordingType === "webcam"
+            ? webcamConfig.resolution
+            : RECORDING_CONSTANTS.DEFAULT_RESOLUTION;
+        const fps =
+          recordingType === "webcam"
+            ? webcamConfig.frameRate
+            : RECORDING_CONSTANTS.DEFAULT_FPS;
+
         const metadata: RecordingMetadata = {
           id: recordingId,
-          name: `Screen Recording ${new Date(now).toLocaleString()}`,
-          type: "screen",
+          name: `${
+            recordingType === "webcam" ? "Webcam" : "Screen"
+          } Recording ${new Date(now).toLocaleString()}`,
+          type: recordingType,
           duration: recordingDuration, // Duration in milliseconds
           size: videoBlob.size,
           createdAt: now,
-          resolution: RECORDING_CONSTANTS.DEFAULT_RESOLUTION,
-          fps: RECORDING_CONSTANTS.DEFAULT_FPS,
+          resolution,
+          fps,
         };
 
         // Save to IndexedDB

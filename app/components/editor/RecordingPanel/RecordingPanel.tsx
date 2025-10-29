@@ -33,6 +33,7 @@ export default function RecordingPanel() {
     selectedSource,
     mode,
     webcamConfig,
+    webcamStream,
   } = useAppSelector((state) => state.recording);
   const { startRecording: startRecordingSession, stopRecordingAndSave } =
     useRecordingSession();
@@ -78,25 +79,17 @@ export default function RecordingPanel() {
 
       if (mode === "screen" && selectedSource) {
         // Screen recording mode
-        await startRecordingSession(selectedSource.id);
+        await startRecordingSession({
+          mode: "screen",
+          sourceId: selectedSource.id,
+        });
       } else if (mode === "webcam") {
-        // Webcam recording mode - for now, show error as it's not fully implemented
-        console.log("[RecordingPanel] Webcam recording starting...");
-        // TODO: Implement webcam recording in Task 6
-
-        // Stop the "recording" state immediately
-        dispatch(setCurrentScreen("webcam-selector"));
-
-        // Show error after a brief delay so the screen transition completes
-        setTimeout(() => {
-          dispatch(
-            setError(
-              "Webcam recording is not yet fully implemented. This is Task 6!"
-            )
-          );
-        }, 100);
-
-        // The webcam stream is preserved in Redux for future use
+        // Webcam recording mode
+        console.log("[RecordingPanel] Starting webcam recording...");
+        await startRecordingSession({
+          mode: "webcam",
+          webcamStream: webcamStream,
+        });
       }
     } catch (err) {
       console.error("[RecordingPanel] Failed to start recording:", err);
