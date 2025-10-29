@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useAppDispatch, useAppSelector } from "./store";
 import {
@@ -17,6 +16,7 @@ import {
 } from "./store";
 import { ProjectState } from "./types";
 import { toast } from "react-hot-toast";
+import { Plus, Video, Trash2 } from "lucide-react";
 
 export default function Page() {
   const dispatch = useAppDispatch();
@@ -123,19 +123,15 @@ export default function Page() {
             <div className="grid py-4 w-2/3 sm:w-1/2 md:w-1/3 lg:w-1/4 grid-cols-1 gap-4 lg:grid-cols-1 lg:gap-5">
               {/* Add Project Button */}
               <button onClick={() => setIsCreating(true)} className="group">
-                <div className="flex flex-col gap-4 rounded-lg border border-white border-opacity-10 shadow-md p-4 transition-transform transform group-hover:scale-105 group-hover:border-opacity-10 group-hover:shadow-lg [box-shadow:_70px_-20px_130px_0px_rgba(255,255,255,0.05)_inset] dark:[box-shadow:_70px_-20px_130px_0px_rgba(255,255,255,0.05)_inset]">
-                  <figure className="flex items-center justify-between w-full rounded-full bg-surface-secondary p-2 dark:border-dark-border dark:bg-dark-surface-secondary">
+                <div className="flex flex-col gap-4 rounded-lg border border-[#3F3F3F] shadow-md p-4 transition-all transform group-hover:scale-105 group-hover:border-[#9333EA] group-hover:shadow-lg bg-bg-tertiary">
+                  <figure className="flex items-center justify-between w-full rounded-full bg-[#2A2A2A] p-2">
                     <div className="flex items-center space-x-4">
-                      <div className="flex size-9 items-center justify-center rounded-full bg-surface-secondary">
-                        <Image
-                          alt="Add Project"
-                          className="invert"
-                          height={18}
-                          src="https://www.svgrepo.com/show/421119/add-create-new.svg"
-                          width={18}
-                        />
+                      <div className="flex size-9 items-center justify-center rounded-full bg-[#9333EA]">
+                        <Plus size={18} className="text-white" />
                       </div>
-                      <h5 className="text-lg font-medium">Add Project</h5>
+                      <h5 className="text-lg font-medium text-gray-200">
+                        Add Project
+                      </h5>
                     </div>
                   </figure>
                 </div>
@@ -149,27 +145,21 @@ export default function Page() {
                     new Date(a.createdAt).getTime()
                 )
                 .map(({ id, projectName, createdAt, lastModified }) => (
-                  <div key={id} className="">
+                  <div key={id}>
                     <Link
                       href={`/projects/${id}`}
                       onClick={() => dispatch(setCurrentProject(id))}
                       className="group block h-full"
                     >
-                      <div className="flex flex-col gap-4 rounded-lg border border-white border-opacity-10 shadow-md p-4 transition-transform transform group-hover:scale-105 group-hover:border-opacity-10 group-hover:shadow-lg [box-shadow:_70px_-20px_130px_0px_rgba(255,255,255,0.05)_inset] dark:[box-shadow:_70px_-20px_130px_0px_rgba(255,255,255,0.05)_inset]">
-                        <figure className="flex items-center justify-between w-full rounded-full bg-surface-secondary p-2 dark:border-dark-border dark:bg-dark-surface-secondary">
+                      <div className="flex flex-col gap-4 rounded-lg border border-[#3F3F3F] shadow-md p-4 transition-all transform group-hover:scale-105 group-hover:border-[#9CCC65] group-hover:shadow-lg bg-bg-tertiary">
+                        <figure className="flex items-center justify-between w-full rounded-full bg-[#2A2A2A] p-2">
                           {/*  Project Name */}
                           <div className="flex items-center space-x-3 flex-1 min-w-0">
-                            <div className="flex-shrink-0 flex size-9 items-center justify-center rounded-full bg-surface-secondary">
-                              <Image
-                                alt={projectName}
-                                className="invert"
-                                height={18}
-                                src="https://www.svgrepo.com/show/522461/video.svg"
-                                width={18}
-                              />
+                            <div className="shrink-0 flex size-9 items-center justify-center rounded-full bg-[#2A2A2A]">
+                              <Video size={18} className="text-gray-300" />
                             </div>
                             <h5
-                              className="truncate font-medium text-base sm:text-lg"
+                              className="truncate font-medium text-base sm:text-lg text-gray-200"
                               title={projectName}
                             >
                               {projectName}
@@ -182,29 +172,18 @@ export default function Page() {
                               e.preventDefault();
                               handleDeleteProject(id);
                             }}
-                            className="flex-shrink-0 ml-2 text-red-500 hover:text-red-600 transition-colors"
+                            className="shrink-0 ml-2 text-gray-500 hover:text-red-400 transition-colors"
                             aria-label="Delete project"
                           >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-6 w-6"
-                              viewBox="0 0 20 20"
-                              fill="currentColor"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
+                            <Trash2 size={18} />
                           </button>
                         </figure>
                         <div className="flex flex-col items-start py-1 gap-1 text-sm">
-                          <p className="text-pretty text-text-secondary dark:text-dark-text-secondary">
+                          <p className="text-gray-400">
                             <span className="font-medium">Created:</span>{" "}
                             {new Date(createdAt).toLocaleDateString()}
                           </p>
-                          <p className="text-pretty text-text-secondary dark:text-dark-text-secondary">
+                          <p className="text-gray-400">
                             <span className="font-medium">Last Modified:</span>{" "}
                             {new Date(lastModified).toLocaleDateString()}
                           </p>
@@ -221,9 +200,9 @@ export default function Page() {
       {/* Add Project Modal */}
       <div className="container mx-auto px-4 py-8">
         {isCreating && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <div className="bg-black border border-white border-opacity-10 p-6 rounded-lg w-96">
-              <h3 className="text-xl font-bold mb-4 text-white">
+          <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+            <div className="bg-bg-tertiary border border-[#3F3F3F] p-6 rounded-lg w-96 shadow-xl">
+              <h3 className="text-xl font-semibold mb-4 text-gray-200">
                 Create New Project
               </h3>
               <input
@@ -239,18 +218,18 @@ export default function Page() {
                   }
                 }}
                 placeholder="Project Name"
-                className="w-full p-2 mb-4 bg-darkSurfacePrimary border border-white border-opacity-10 shadow-md text-white rounded focus:outline-none focus:ring-2 focus:ring-white-500 focus:border-white-500"
+                className="w-full p-2.5 mb-4 bg-[#2A2A2A] border border-[#3F3F3F] text-white text-sm rounded focus:outline-none focus:ring-1 focus:ring-[#9333EA]"
               />
               <div className="flex justify-end gap-2">
                 <button
                   onClick={() => setIsCreating(false)}
-                  className="px-4 py-2 bg-darkSurfacePrimary border border-white border-opacity-10 shadow-md hover:bg-[#383838] text-white rounded "
+                  className="px-4 py-2 bg-[#2A2A2A] border border-[#3F3F3F] hover:bg-[#3A3A3A] text-gray-200 text-sm rounded transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleCreateProject}
-                  className="px-4 py-2 bg-white text-black hover:bg-[#ccc] rounded"
+                  className="px-4 py-2 bg-[#9333EA] text-white text-sm hover:bg-[#7E22CE] rounded transition-colors"
                 >
                   Create
                 </button>

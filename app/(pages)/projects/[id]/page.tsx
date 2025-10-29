@@ -33,6 +33,7 @@ import ProjectName from "../../../components/editor/player/ProjectName";
 import { storeFile } from "@/app/store";
 import toast from "react-hot-toast";
 import { setFilesID } from "@/app/store/slices/projectSlice";
+import { Video, Music, Image as ImageIcon, Type } from "lucide-react";
 
 export default function ProjectClient({
   params,
@@ -239,8 +240,8 @@ export default function ProjectClient({
       )}
       <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar - Buttons */}
-        <div className="flex-[0.1] min-w-[60px] max-w-[100px] border-r border-gray-700 overflow-y-auto p-4">
-          <div className="flex flex-col space-y-2">
+        <div className="w-[50px] border-r border-[#3F3F3F] bg-bg-tertiary overflow-y-auto p-1.5">
+          <div className="flex flex-col space-y-1.5">
             <HomeButton />
             <TextButton onClick={() => handleFocus("text")} />
             <LibraryButton onClick={() => handleFocus("media")} />
@@ -251,10 +252,10 @@ export default function ProjectClient({
         </div>
 
         {/* Add media and text */}
-        <div className="flex-[0.3] min-w-[200px] border-r border-gray-800 overflow-y-auto p-4">
+        <div className="w-[240px] border-r border-[#3F3F3F] bg-bg-tertiary overflow-y-auto p-3">
           {activeSection === "media" && (
             <div>
-              <h2 className="text-lg flex flex-row gap-2 items-center justify-center font-semibold mb-2">
+              <h2 className="text-sm flex flex-row gap-2 items-center justify-center font-semibold mb-2 text-gray-200">
                 <AddMedia />
               </h2>
               <MediaList />
@@ -267,7 +268,9 @@ export default function ProjectClient({
           )}
           {activeSection === "export" && (
             <div>
-              <h2 className="text-lg font-semibold mb-4">Export</h2>
+              <h2 className="text-sm font-semibold mb-3 text-gray-200">
+                Export
+              </h2>
               <ExportList />
             </div>
           )}
@@ -280,70 +283,42 @@ export default function ProjectClient({
         </div>
 
         {/* Right Sidebar - Element Properties */}
-        <div className="flex-[0.4] min-w-[200px] border-l border-gray-800 overflow-y-auto p-4">
+        <div className="w-[280px] border-l border-[#3F3F3F] bg-bg-tertiary overflow-y-auto p-3">
           {activeElement === "media" && (
             <div>
-              <h2 className="text-lg font-semibold mb-4">Media Properties</h2>
+              <h2 className="text-sm font-semibold mb-3 text-gray-200">
+                Media Properties
+              </h2>
               <MediaProperties />
             </div>
           )}
           {activeElement === "text" && (
             <div>
-              <h2 className="text-lg font-semibold mb-4">Text Properties</h2>
+              <h2 className="text-sm font-semibold mb-3 text-gray-200">
+                Text Properties
+              </h2>
               <TextProperties />
             </div>
           )}
         </div>
       </div>
       {/* Timeline at bottom */}
-      <div className="flex flex-row border-t border-gray-500">
-        <div className=" bg-darkSurfacePrimary flex flex-col items-center justify-center mt-20">
-          <div className="relative h-16">
-            <div className="flex items-center gap-2 p-4">
-              <Image
-                alt="Video"
-                className="invert h-auto w-auto max-w-[30px] max-h-[30px]"
-                height={30}
-                width={30}
-                src="https://www.svgrepo.com/show/532727/video.svg"
-              />
-            </div>
+      <div className="flex flex-row border-t border-[#3F3F3F]">
+        <div className="w-[50px] bg-[#1E1D21] flex flex-col items-center justify-start pt-20">
+          <div className="relative h-16 flex items-center justify-center">
+            <Video size={20} className="text-gray-400" />
           </div>
 
-          <div className="relative h-16">
-            <div className="flex items-center gap-2 p-4">
-              <Image
-                alt="Video"
-                className="invert h-auto w-auto max-w-[30px] max-h-[30px]"
-                height={30}
-                width={30}
-                src="https://www.svgrepo.com/show/532708/music.svg"
-              />
-            </div>
+          <div className="relative h-16 flex items-center justify-center">
+            <Music size={20} className="text-gray-400" />
           </div>
 
-          <div className="relative h-16">
-            <div className="flex items-center gap-2 p-4">
-              <Image
-                alt="Video"
-                className="invert h-auto w-auto max-w-[30px] max-h-[30px]"
-                height={30}
-                width={30}
-                src="https://www.svgrepo.com/show/535454/image.svg"
-              />
-            </div>
+          <div className="relative h-16 flex items-center justify-center">
+            <ImageIcon size={20} className="text-gray-400" />
           </div>
 
-          <div className="relative h-16">
-            <div className="flex items-center gap-2 p-4">
-              <Image
-                alt="Video"
-                className="invert h-auto w-auto max-w-[30px] max-h-[30px]"
-                height={30}
-                width={30}
-                src="https://www.svgrepo.com/show/535686/text.svg"
-              />
-            </div>
+          <div className="relative h-16 flex items-center justify-center">
+            <Type size={20} className="text-gray-400" />
           </div>
         </div>
         <Timeline />

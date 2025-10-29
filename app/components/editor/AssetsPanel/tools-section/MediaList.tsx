@@ -1,14 +1,8 @@
 "use client";
 
-import {
-  listFiles,
-  deleteFile,
-  useAppSelector,
-  storeFile,
-  getFile,
-} from "@/app/store";
+import { deleteFile, useAppSelector, storeFile, getFile } from "@/app/store";
 import { setMediaFiles, setFilesID } from "@/app/store/slices/projectSlice";
-import { MediaFile, UploadedFile } from "@/app/types";
+import { UploadedFile } from "@/app/types";
 import { useAppDispatch } from "@/app/store";
 import AddMedia from "../AddButtons/AddMedia";
 import DragDropZone from "../DragDropZone";
@@ -97,17 +91,17 @@ export default function MediaList() {
         <DragDropZone onFilesDropped={handleFilesDropped} />
       </div>
       {files.length > 0 && (
-        <div className="space-y-4">
+        <div className="space-y-2">
           {files.map((mediaFile) => (
             <div
               key={mediaFile.id}
-              className="border border-gray-700 p-3 rounded bg-black bg-opacity-30 hover:bg-opacity-40 transition-all"
+              className="border border-[#3F3F3F] p-2 rounded bg-[#2A2A2A] hover:bg-[#3A3A3A] hover:border-[#9CCC65] transition-all group"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2 flex-1 min-w-0">
                   <AddMedia fileId={mediaFile.id} />
                   <span
-                    className="py-1 px-1 text-sm flex-1 truncate"
+                    className="py-0.5 px-1 text-xs flex-1 truncate text-gray-300"
                     title={mediaFile.file.name}
                   >
                     {mediaFile.file.name}
@@ -115,12 +109,12 @@ export default function MediaList() {
                 </div>
                 <button
                   onClick={() => onDeleteMedia(mediaFile.id)}
-                  className="text-red-500 hover:text-red-700 shrink-0 ml-2"
+                  className="text-gray-500 hover:text-red-400 shrink-0 ml-2 opacity-0 group-hover:opacity-100 transition-opacity"
                   aria-label="Delete file"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6"
+                    className="h-4 w-4"
                     viewBox="0 0 20 20"
                     fill="currentColor"
                   >

@@ -8,7 +8,7 @@ import { formatTime } from "@/app/utils/utils";
 import toast from "react-hot-toast";
 
 interface InOutMarkersProps {
-  timelineRef: React.RefObject<HTMLDivElement>;
+  timelineRef: React.RefObject<HTMLDivElement | null>;
 }
 
 const InOutMarkers: React.FC<InOutMarkersProps> = ({ timelineRef }) => {

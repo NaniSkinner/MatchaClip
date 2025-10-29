@@ -8,9 +8,9 @@ import {
   setIsPlaying,
   setActiveElement,
 } from "@/app/store/slices/projectSlice";
-import { memo, useCallback, useEffect, useMemo, useRef } from "react";
+import { memo, useMemo, useRef } from "react";
 import { useDispatch } from "react-redux";
-import Image from "next/image";
+import { Target, Scissors, Copy, Trash2 } from "lucide-react";
 import Header from "./Header";
 import VideoTimeline from "./elements-timeline/VideoTimeline";
 import ImageTimeline from "./elements-timeline/ImageTimeline";
@@ -20,6 +20,7 @@ import InOutMarkers from "./InOutMarkers";
 import { throttle } from "lodash";
 import GlobalKeyHandlerProps from "../../../components/editor/keys/GlobalKeyHandlerProps";
 import toast from "react-hot-toast";
+import Tooltip from "../Tooltip";
 export const Timeline = () => {
   const {
     currentTime,
@@ -225,89 +226,59 @@ export const Timeline = () => {
   return (
     <div className="flex w-full flex-col gap-2">
       <div className="flex flex-row items-center justify-between gap-12 w-full">
-        <div className="flex flex-row items-center gap-2">
+        <div className="flex flex-row items-center gap-1">
           {/* Track Marker */}
-          <button
-            onClick={() => dispatch(setMarkerTrack(!enableMarkerTracking))}
-            className="bg-white border rounded-md border-transparent transition-colors flex flex-row items-center justify-center text-gray-800 hover:bg-[#ccc] dark:hover:bg-[#ccc] mt-2 font-medium text-sm sm:text-base h-auto px-2 py-1 sm:w-auto"
-          >
-            {enableMarkerTracking ? (
-              <Image
-                alt="cut"
-                className="h-auto w-auto max-w-[20px] max-h-[20px]"
-                height={30}
-                width={30}
-                src="https://www.svgrepo.com/show/447546/yes-alt.svg"
-              />
-            ) : (
-              <Image
-                alt="cut"
-                className="h-auto w-auto max-w-[20px] max-h-[20px]"
-                height={30}
-                width={30}
-                src="https://www.svgrepo.com/show/447315/dismiss.svg"
-              />
-            )}
-            <span className="ml-2">
-              Track Marker <span className="text-xs">(T)</span>
-            </span>
-          </button>
+          <Tooltip content="Track Marker (T)">
+            <button
+              onClick={() => dispatch(setMarkerTrack(!enableMarkerTracking))}
+              className={`h-8 px-3 flex items-center justify-center transition-colors rounded ${
+                enableMarkerTracking
+                  ? "bg-[#9333EA] text-white hover:bg-[#7E22CE]"
+                  : "bg-[#2A2A2A] text-gray-300 hover:bg-[#3A3A3A]"
+              }`}
+              aria-label="Track Marker"
+            >
+              <Target size={16} />
+            </button>
+          </Tooltip>
           {/* Split */}
-          <button
-            onClick={handleSplit}
-            className="bg-white border rounded-md border-transparent transition-colors flex flex-row items-center justify-center text-gray-800 hover:bg-[#ccc] dark:hover:bg-[#ccc] mt-2 font-medium text-sm sm:text-base h-auto px-2 py-1 sm:w-auto"
-          >
-            <Image
-              alt="cut"
-              className="h-auto w-auto max-w-[20px] max-h-[20px]"
-              height={30}
-              width={30}
-              src="https://www.svgrepo.com/show/509075/cut.svg"
-            />
-            <span className="ml-2">
-              Split <span className="text-xs">(S)</span>
-            </span>
-          </button>
+          <Tooltip content="Split (S)">
+            <button
+              onClick={handleSplit}
+              className="h-8 px-3 flex items-center justify-center bg-[#2A2A2A] text-gray-300 hover:bg-[#3A3A3A] transition-colors rounded"
+              aria-label="Split"
+            >
+              <Scissors size={16} />
+            </button>
+          </Tooltip>
           {/* Duplicate */}
-          <button
-            onClick={handleDuplicate}
-            className="bg-white border rounded-md border-transparent transition-colors flex flex-row items-center justify-center text-gray-800 hover:bg-[#ccc] dark:hover:bg-[#ccc] mt-2 font-medium text-sm sm:text-base h-auto px-2 py-1 sm:w-auto"
-          >
-            <Image
-              alt="cut"
-              className="h-auto w-auto max-w-[20px] max-h-[20px]"
-              height={30}
-              width={30}
-              src="https://www.svgrepo.com/show/521623/duplicate.svg"
-            />
-            <span className="ml-2">
-              Duplicate <span className="text-xs">(D)</span>
-            </span>
-          </button>
+          <Tooltip content="Duplicate (D)">
+            <button
+              onClick={handleDuplicate}
+              className="h-8 px-3 flex items-center justify-center bg-[#2A2A2A] text-gray-300 hover:bg-[#3A3A3A] transition-colors rounded"
+              aria-label="Duplicate"
+            >
+              <Copy size={16} />
+            </button>
+          </Tooltip>
           {/* Delete */}
-          <button
-            onClick={handleDelete}
-            className="bg-white border rounded-md border-transparent transition-colors flex flex-row items-center justify-center text-gray-800 hover:bg-[#ccc] dark:hover:bg-[#ccc] mt-2 font-medium text-sm sm:text-base h-auto px-2 py-1 sm:w-auto"
-          >
-            <Image
-              alt="Delete"
-              className="h-auto w-auto max-w-[20px] max-h-[20px]"
-              height={30}
-              width={30}
-              src="https://www.svgrepo.com/show/511788/delete-1487.svg"
-            />
-            <span className="ml-2">
-              Delete <span className="text-xs">(Del)</span>
-            </span>
-          </button>
+          <Tooltip content="Delete (Del)">
+            <button
+              onClick={handleDelete}
+              className="h-8 px-3 flex items-center justify-center bg-[#2A2A2A] text-gray-300 hover:bg-[#3A3A3A] transition-colors rounded"
+              aria-label="Delete"
+            >
+              <Trash2 size={16} />
+            </button>
+          </Tooltip>
         </div>
 
         {/* Timeline Zoom */}
         <div className="flex flex-row justify-between items-center gap-2 mr-4">
-          <label className="block text-sm mt-1 font-semibold text-white">
+          <label className="block text-xs font-medium text-gray-400">
             Zoom
           </label>
-          <span className="text-white text-lg">-</span>
+          <span className="text-gray-400 text-sm">-</span>
           <input
             type="range"
             min={30}
@@ -315,9 +286,9 @@ export const Timeline = () => {
             step="1"
             value={timelineZoom}
             onChange={(e) => throttledZoom(Number(e.target.value))}
-            className="w-[100px] bg-darkSurfacePrimary border border-white border-opacity-10 shadow-md text-white rounded focus:outline-none focus:border-white-500"
+            className="w-[100px] h-1 bg-[#2A2A2A] border border-[#3F3F3F] shadow-sm text-white rounded focus:outline-none accent-[#9333EA]"
           />
-          <span className="text-white text-lg">+</span>
+          <span className="text-gray-400 text-sm">+</span>
         </div>
       </div>
 

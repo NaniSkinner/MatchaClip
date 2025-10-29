@@ -1,19 +1,14 @@
 "use client";
 
-import { listFiles, useAppDispatch, useAppSelector } from "../../../../store";
-import {
-  setMediaFiles,
-  setFilesID,
-} from "../../../../store/slices/projectSlice";
+import { useAppDispatch, useAppSelector } from "../../../../store";
+import { setFilesID } from "../../../../store/slices/projectSlice";
 import { storeFile } from "../../../../store";
-import { categorizeFile } from "../../../../utils/utils";
-import Image from "next/image";
 import { validateVideoFile } from "../../../../lib/file-validation";
 import toast from "react-hot-toast";
 import { useState } from "react";
 
 export default function AddMedia() {
-  const { mediaFiles, filesID } = useAppSelector((state) => state.projectState);
+  const { filesID } = useAppSelector((state) => state.projectState);
   const dispatch = useAppDispatch();
   const [isValidating, setIsValidating] = useState(false);
 
@@ -80,22 +75,16 @@ export default function AddMedia() {
     <div>
       <label
         htmlFor="file-upload"
-        className={`cursor-pointer rounded-full bg-white border border-solid border-transparent transition-colors flex flex-row gap-2 items-center justify-center text-gray-800 hover:bg-[#ccc] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-auto py-2 px-2 sm:px-5 sm:w-auto ${
+        className={`cursor-pointer rounded bg-[#9CCC65] border border-[#7CB342] transition-colors flex flex-row gap-2 items-center justify-center text-black hover:bg-[#7CB342] font-medium text-xs h-auto py-1.5 px-3 w-full ${
           isValidating ? "opacity-50 cursor-not-allowed" : ""
         }`}
       >
         {isValidating ? (
-          <div className="w-3 h-3 border-2 border-t-gray-800 border-r-gray-800 border-opacity-30 border-t-opacity-100 rounded-full animate-spin"></div>
+          <div className="w-3 h-3 border-2 border-t-black border-r-black border-opacity-30 border-t-opacity-100 rounded-full animate-spin"></div>
         ) : (
-          <Image
-            alt="Add Project"
-            className="Black"
-            height={12}
-            width={12}
-            src="https://www.svgrepo.com/show/514275/upload-cloud.svg"
-          />
+          <span className="text-sm">+</span>
         )}
-        <span className="text-xs">
+        <span className="text-xs font-medium">
           {isValidating ? "Validating..." : "Add Media"}
         </span>
       </label>
