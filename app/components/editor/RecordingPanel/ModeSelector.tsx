@@ -14,10 +14,6 @@ export default function ModeSelector() {
   const dispatch = useAppDispatch();
 
   const handleModeSelect = (mode: RecordingMode) => {
-    if (mode === RecordingMode.PIP) {
-      // PiP mode coming in Phase 3
-      return;
-    }
     dispatch(setRecordingMode(mode));
   };
 
@@ -41,8 +37,8 @@ export default function ModeSelector() {
       name: "Picture-in-Picture",
       description: "Screen + webcam overlay",
       icon: PictureInPicture2,
-      enabled: false,
-      comingSoon: true,
+      enabled: true,
+      comingSoon: false,
     },
   ];
 
@@ -116,8 +112,8 @@ export default function ModeSelector() {
       })}
 
       <div className="mt-6 p-3 bg-blue-500/10 border border-blue-500/30 rounded text-xs text-blue-400">
-        <strong>Phase 2:</strong> Screen and webcam recording available. PiP
-        mode coming in Phase 3.
+        <strong>Phase 3:</strong> All recording modes now available!
+        Picture-in-Picture combines screen + webcam overlay.
       </div>
     </div>
   );

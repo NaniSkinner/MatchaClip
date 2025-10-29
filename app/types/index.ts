@@ -206,6 +206,11 @@ export interface WebcamConfiguration {
   frameRate: number;
 }
 
+export interface PiPConfiguration {
+  position: "top-left" | "top-right" | "bottom-left" | "bottom-right";
+  size: "small" | "medium" | "large";
+}
+
 export interface RecordingState {
   // UI State
   isPanelOpen: boolean;
@@ -213,6 +218,7 @@ export interface RecordingState {
     | "mode-selector"
     | "screen-selector"
     | "webcam-selector"
+    | "pip-configurator"
     | "countdown"
     | "recording"
     | "success";
@@ -248,4 +254,10 @@ export interface RecordingState {
   webcamConfig: WebcamConfiguration;
   availableCameras: CameraDevice[];
   webcamStream: MediaStream | null;
+
+  // PiP Configuration (Phase 3)
+  pipConfig: PiPConfiguration;
+
+  // Recording Stream (for live preview)
+  recordingStream: MediaStream | null;
 }

@@ -9,6 +9,7 @@ import {
   addRecording,
   setMicrophoneStream,
   setSystemAudioStream,
+  setRecordingStream,
 } from "../store/slices/recordingSlice";
 import { RecordingMetadata } from "../types";
 import {
@@ -17,13 +18,14 @@ import {
 } from "../components/editor/RecordingPanel/constants";
 import { getBestSupportedCodec } from "../lib/recording-validation";
 import { saveRecording } from "../lib/recording-storage";
+import { VideoCompositor } from "../lib/video-compositor";
 import { v4 as uuidv4 } from "uuid";
 import toast from "react-hot-toast";
 
 interface RecordingStartOptions {
   sourceId?: string; // For screen recording (Electron desktopCapturer)
-  mode: "screen" | "webcam";
-  webcamStream?: MediaStream | null; // For webcam recording
+  mode: "screen" | "webcam" | "pip";
+  webcamStream?: MediaStream | null; // For webcam recording or PiP overlay
 }
 
 interface UseRecordingSessionReturn {
@@ -46,6 +48,7 @@ export function useRecordingSession(): UseRecordingSessionReturn {
     audioConfig,
     mode: recordingMode,
     webcamConfig,
+    pipConfig,
   } = useAppSelector((state) => state.recording);
   const [isRecording, setIsRecording] = useState(false);
   const [error, setErrorState] = useState<string | null>(null);
@@ -55,6 +58,7 @@ export function useRecordingSession(): UseRecordingSessionReturn {
   const audioContextRef = useRef<AudioContext | null>(null);
   const micStreamRef = useRef<MediaStream | null>(null);
   const systemAudioStreamRef = useRef<MediaStream | null>(null);
+  const compositorRef = useRef<VideoCompositor | null>(null);
 
   /**
    * Combine video and audio streams using Web Audio API
@@ -199,6 +203,84 @@ export function useRecordingSession(): UseRecordingSessionReturn {
             );
             // Could optionally capture screen audio even in webcam mode if user wants
           }
+        }
+        // === PIP RECORDING MODE ===
+        else if (mode === "pip") {
+          if (!sourceId) {
+            throw new Error("PiP recording requires a screen sourceId");
+          }
+          if (!webcamStream) {
+            throw new Error("PiP recording requires a webcamStream");
+          }
+
+          console.log("[Recording] Starting PiP composition...");
+
+          // Get screen stream via navigator.mediaDevices (same as screen recording)
+          const pipConstraints: any = {
+            audio: audioConfig.systemAudioEnabled
+              ? {
+                  mandatory: {
+                    chromeMediaSource: "desktop",
+                  },
+                }
+              : false,
+            video: {
+              mandatory: {
+                chromeMediaSource: "desktop",
+                chromeMediaSourceId: sourceId,
+                minWidth: RECORDING_CONSTANTS.DEFAULT_RESOLUTION.width,
+                maxWidth: RECORDING_CONSTANTS.DEFAULT_RESOLUTION.width,
+                minHeight: RECORDING_CONSTANTS.DEFAULT_RESOLUTION.height,
+                maxHeight: RECORDING_CONSTANTS.DEFAULT_RESOLUTION.height,
+                minFrameRate: RECORDING_CONSTANTS.DEFAULT_FPS,
+                maxFrameRate: RECORDING_CONSTANTS.DEFAULT_FPS,
+              },
+            },
+          };
+
+          const screenStream = await navigator.mediaDevices.getUserMedia(
+            pipConstraints
+          );
+          if (!screenStream) {
+            throw new Error("Failed to get screen stream for PiP");
+          }
+
+          // Get screen dimensions (default to 1920x1080 if not available)
+          const screenVideoTrack = screenStream.getVideoTracks()[0];
+          const settings = screenVideoTrack?.getSettings();
+          const screenWidth = settings?.width || 1920;
+          const screenHeight = settings?.height || 1080;
+
+          console.log(
+            "[Recording] Screen dimensions:",
+            screenWidth,
+            "x",
+            screenHeight
+          );
+
+          // Create compositor
+          const compositor = new VideoCompositor(
+            screenWidth,
+            screenHeight,
+            pipConfig
+          );
+          compositor.setScreenStream(screenStream);
+          compositor.setWebcamStream(webcamStream);
+
+          // Start compositing and get output stream
+          videoStream = compositor.start();
+          compositorRef.current = compositor;
+
+          console.log("[Recording] PiP compositor initialized");
+
+          // Handle system audio from screen capture (macOS)
+          const systemAudioTrack = screenStream.getAudioTracks()[0];
+          if (systemAudioTrack && audioConfig.systemAudioEnabled) {
+            const systemStream = new MediaStream([systemAudioTrack]);
+            systemAudioStreamRef.current = systemStream;
+            dispatch(setSystemAudioStream(systemStream));
+            console.log("[Recording] System audio track captured from screen");
+          }
         } else {
           throw new Error(`Unknown recording mode: ${mode}`);
         }
@@ -234,6 +316,10 @@ export function useRecordingSession(): UseRecordingSessionReturn {
         );
 
         mediaStreamRef.current = combinedStream;
+
+        // Store recording stream for live preview
+        dispatch(setRecordingStream(combinedStream));
+        console.log("[Recording] Recording stream set for preview");
 
         // Create MediaRecorder
         const recorderOptions = {
@@ -348,11 +434,19 @@ export function useRecordingSession(): UseRecordingSessionReturn {
             ? webcamConfig.frameRate
             : RECORDING_CONSTANTS.DEFAULT_FPS;
 
+        // Generate recording name based on type
+        let recordingName = "";
+        if (recordingType === "webcam") {
+          recordingName = "Webcam";
+        } else if (recordingType === "pip") {
+          recordingName = "PiP";
+        } else {
+          recordingName = "Screen";
+        }
+
         const metadata: RecordingMetadata = {
           id: recordingId,
-          name: `${
-            recordingType === "webcam" ? "Webcam" : "Screen"
-          } Recording ${new Date(now).toLocaleString()}`,
+          name: `${recordingName} Recording ${new Date(now).toLocaleString()}`,
           type: recordingType,
           duration: recordingDuration, // Duration in milliseconds
           size: videoBlob.size,
@@ -411,11 +505,21 @@ export function useRecordingSession(): UseRecordingSessionReturn {
    * Clean up media stream and recorder
    */
   const cleanupRecording = () => {
+    // Clean up compositor (PiP mode)
+    if (compositorRef.current) {
+      compositorRef.current.cleanup();
+      compositorRef.current = null;
+      console.log("[Recording] Compositor cleaned up");
+    }
+
     // Stop all tracks
     if (mediaStreamRef.current) {
       mediaStreamRef.current.getTracks().forEach((track) => track.stop());
       mediaStreamRef.current = null;
     }
+
+    // Clear recording stream from Redux
+    dispatch(setRecordingStream(null));
 
     // Stop microphone stream
     if (micStreamRef.current) {

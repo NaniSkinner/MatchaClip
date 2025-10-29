@@ -8,6 +8,7 @@ import {
   AudioDevice,
   CameraDevice,
   WebcamConfiguration,
+  PiPConfiguration,
 } from "../../types";
 
 const initialState: RecordingState = {
@@ -57,6 +58,15 @@ const initialState: RecordingState = {
   },
   availableCameras: [],
   webcamStream: null,
+
+  // PiP Configuration (Phase 3)
+  pipConfig: {
+    position: "bottom-right",
+    size: "medium",
+  },
+
+  // Recording Stream (for live preview)
+  recordingStream: null,
 };
 
 const recordingSlice = createSlice({
@@ -91,6 +101,8 @@ const recordingSlice = createSlice({
         state.currentScreen = "webcam-selector";
       } else if (action.payload === "screen") {
         state.currentScreen = "screen-selector";
+      } else if (action.payload === "pip") {
+        state.currentScreen = "pip-configurator";
       } else {
         // null mode - back to mode selector
         state.currentScreen = "mode-selector";
@@ -241,6 +253,21 @@ const recordingSlice = createSlice({
     setWebcamStream: (state, action: PayloadAction<MediaStream | null>) => {
       state.webcamStream = action.payload;
     },
+
+    // ===== PIP ACTIONS (Phase 3) =====
+
+    // Update PiP configuration
+    setPipConfig: (state, action: PayloadAction<Partial<PiPConfiguration>>) => {
+      state.pipConfig = {
+        ...state.pipConfig,
+        ...action.payload,
+      };
+    },
+
+    // Set recording stream (for live preview)
+    setRecordingStream: (state, action: PayloadAction<MediaStream | null>) => {
+      state.recordingStream = action.payload;
+    },
   },
 });
 
@@ -273,6 +300,9 @@ export const {
   setAvailableCameras,
   setWebcamConfig,
   setWebcamStream,
+  // PiP actions
+  setPipConfig,
+  setRecordingStream,
 } = recordingSlice.actions;
 
 export default recordingSlice.reducer;

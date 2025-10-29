@@ -13,6 +13,7 @@ import { useRecordingSession } from "../../../hooks/useRecordingSession";
 import ModeSelector from "./ModeSelector";
 import ScreenSelector from "./ScreenSelector";
 import WebcamSelector from "./WebcamSelector";
+import PiPConfigurator from "./PiPConfigurator";
 import CountdownOverlay from "./CountdownOverlay";
 import RecordingControls from "./RecordingControls";
 import StorageIndicator from "./StorageIndicator";
@@ -74,6 +75,22 @@ export default function RecordingPanel() {
       return;
     }
 
+    if (mode === "pip") {
+      // PiP mode validation
+      if (!selectedSource) {
+        console.error("[RecordingPanel] No screen source selected for PiP");
+        dispatch(setError("Please select a screen source for PiP recording."));
+        dispatch(setCurrentScreen("pip-configurator"));
+        return;
+      }
+      if (!webcamConfig.selectedCameraId) {
+        console.error("[RecordingPanel] No camera selected for PiP");
+        dispatch(setError("Please select a camera for PiP recording."));
+        dispatch(setCurrentScreen("pip-configurator"));
+        return;
+      }
+    }
+
     try {
       dispatch(startRecording());
 
@@ -88,6 +105,14 @@ export default function RecordingPanel() {
         console.log("[RecordingPanel] Starting webcam recording...");
         await startRecordingSession({
           mode: "webcam",
+          webcamStream: webcamStream,
+        });
+      } else if (mode === "pip" && selectedSource) {
+        // PiP recording mode with canvas compositor
+        console.log("[RecordingPanel] Starting PiP recording...");
+        await startRecordingSession({
+          mode: "pip",
+          sourceId: selectedSource.id,
           webcamStream: webcamStream,
         });
       }
@@ -146,6 +171,7 @@ export default function RecordingPanel() {
           {currentScreen === "mode-selector" && <ModeSelector />}
           {currentScreen === "screen-selector" && <ScreenSelector />}
           {currentScreen === "webcam-selector" && <WebcamSelector />}
+          {currentScreen === "pip-configurator" && <PiPConfigurator />}
           {currentScreen === "recording" && (
             <RecordingControls onStop={handleStopRecording} />
           )}

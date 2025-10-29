@@ -25,7 +25,8 @@ export default function RecordingControls({ onStop }: RecordingControlsProps) {
     audioConfig,
     microphoneStream,
     systemAudioStream,
-    webcamStream,
+    recordingStream,
+    pipConfig,
   } = useAppSelector((state) => state.recording);
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -35,14 +36,14 @@ export default function RecordingControls({ onStop }: RecordingControlsProps) {
     (cam) => cam.deviceId === webcamConfig.selectedCameraId
   );
 
-  // Set up webcam preview when in webcam recording mode
+  // Set up live preview for all recording modes
   useEffect(() => {
-    if (mode === "webcam" && webcamStream && videoRef.current) {
-      console.log("[RecordingControls] Setting up webcam preview");
-      videoRef.current.srcObject = webcamStream;
+    if (recordingStream && videoRef.current) {
+      console.log("[RecordingControls] Setting up recording preview", mode);
+      videoRef.current.srcObject = recordingStream;
       videoRef.current.play().catch((err) => {
         console.error(
-          "[RecordingControls] Failed to play webcam preview:",
+          "[RecordingControls] Failed to play recording preview:",
           err
         );
       });
@@ -54,7 +55,7 @@ export default function RecordingControls({ onStop }: RecordingControlsProps) {
         videoRef.current.srcObject = null;
       }
     };
-  }, [mode, webcamStream]);
+  }, [recordingStream, mode]);
 
   return (
     <div className="space-y-6">
@@ -88,8 +89,24 @@ export default function RecordingControls({ onStop }: RecordingControlsProps) {
         </div>
       )}
 
-      {/* Webcam Live Preview (during recording) */}
-      {mode === "webcam" && webcamStream && (
+      {/* Source Info - PiP Recording */}
+      {mode === "pip" && selectedSource && currentCamera && (
+        <div className="p-3 bg-gray-800/50 rounded-lg">
+          <p className="text-xs text-gray-500 mb-1">Recording Sources</p>
+          <p className="text-sm text-white truncate">
+            Screen: {selectedSource.name}
+          </p>
+          <p className="text-sm text-white truncate mt-1">
+            Camera: {currentCamera.label}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">
+            Position: {pipConfig.position} • Size: {pipConfig.size}
+          </p>
+        </div>
+      )}
+
+      {/* Live Preview (all recording modes) */}
+      {recordingStream && (
         <div className="space-y-2">
           <p className="text-xs text-gray-500">Live Preview</p>
           <div className="relative aspect-video bg-black rounded-lg overflow-hidden border border-gray-700">
@@ -105,6 +122,12 @@ export default function RecordingControls({ onStop }: RecordingControlsProps) {
               <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
               REC
             </div>
+            {/* PiP mode indicator */}
+            {mode === "pip" && (
+              <div className="absolute top-2 right-2 px-2 py-1 bg-purple-600/90 rounded text-xs font-medium text-white">
+                Picture-in-Picture
+              </div>
+            )}
           </div>
         </div>
       )}
