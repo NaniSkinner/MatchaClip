@@ -2,6 +2,7 @@
 import { Square } from "lucide-react";
 import { useAppSelector } from "../../../store";
 import RecordingTimer from "./RecordingTimer";
+import { VUMeter } from "./VUMeter";
 
 interface RecordingControlsProps {
   onStop: () => void;
@@ -13,9 +14,14 @@ interface RecordingControlsProps {
  * Shows recording status, timer, and stop button
  */
 export default function RecordingControls({ onStop }: RecordingControlsProps) {
-  const { isRecording, startTime, selectedSource } = useAppSelector(
-    (state) => state.recording
-  );
+  const {
+    isRecording,
+    startTime,
+    selectedSource,
+    audioConfig,
+    microphoneStream,
+    systemAudioStream,
+  } = useAppSelector((state) => state.recording);
 
   return (
     <div className="space-y-6">
@@ -42,6 +48,23 @@ export default function RecordingControls({ onStop }: RecordingControlsProps) {
         <div>
           <p className="text-xs text-gray-500 mb-2">Duration</p>
           <RecordingTimer startTime={startTime} isRecording={isRecording} />
+        </div>
+      )}
+
+      {/* Audio Level Meters (During Recording) */}
+      {isRecording && (microphoneStream || systemAudioStream) && (
+        <div className="space-y-3">
+          <p className="text-xs text-gray-500">Audio Levels</p>
+
+          {/* Microphone VU Meter */}
+          {microphoneStream && audioConfig.microphoneEnabled && (
+            <VUMeter stream={microphoneStream} label="Microphone" />
+          )}
+
+          {/* System Audio VU Meter */}
+          {systemAudioStream && audioConfig.systemAudioEnabled && (
+            <VUMeter stream={systemAudioStream} label="System Audio" />
+          )}
         </div>
       )}
 

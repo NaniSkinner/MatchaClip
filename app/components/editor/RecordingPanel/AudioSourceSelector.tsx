@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Mic, Volume2, AlertCircle } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../../store";
 import {
@@ -12,6 +12,7 @@ import {
   checkMicrophonePermission,
 } from "../../../lib/audio-permissions";
 import { getAudioInputDevices } from "../../../lib/audio-devices";
+import { VUMeter } from "./VUMeter";
 
 /**
  * AudioSourceSelector Component
@@ -30,6 +31,12 @@ export default function AudioSourceSelector() {
     "granted" | "denied" | "prompt"
   >("prompt");
 
+  // Preview streams for testing audio levels
+  const [previewMicStream, setPreviewMicStream] = useState<MediaStream | null>(
+    null
+  );
+  const previewStreamRef = useRef<MediaStream | null>(null);
+
   // Detect macOS for system audio toggle
   const isMacOS =
     typeof navigator !== "undefined" &&
@@ -39,6 +46,50 @@ export default function AudioSourceSelector() {
   useEffect(() => {
     loadAudioDevices();
   }, []);
+
+  // Start/stop preview stream for audio level testing
+  useEffect(() => {
+    const startPreview = async () => {
+      // Only start preview if mic is enabled and a device is selected
+      if (!audioConfig.microphoneEnabled || !audioConfig.selectedMicId) {
+        // Clean up existing preview
+        if (previewStreamRef.current) {
+          previewStreamRef.current.getTracks().forEach((track) => track.stop());
+          previewStreamRef.current = null;
+          setPreviewMicStream(null);
+        }
+        return;
+      }
+
+      try {
+        // Create preview stream for VU meter
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            deviceId: audioConfig.selectedMicId,
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: false,
+          },
+        });
+
+        previewStreamRef.current = stream;
+        setPreviewMicStream(stream);
+      } catch (error) {
+        console.error("Failed to start audio preview:", error);
+        setPreviewMicStream(null);
+      }
+    };
+
+    startPreview();
+
+    // Cleanup on unmount
+    return () => {
+      if (previewStreamRef.current) {
+        previewStreamRef.current.getTracks().forEach((track) => track.stop());
+        previewStreamRef.current = null;
+      }
+    };
+  }, [audioConfig.microphoneEnabled, audioConfig.selectedMicId]);
 
   /**
    * Load available microphones
@@ -197,6 +248,24 @@ export default function AudioSourceSelector() {
           <div className="pl-2 flex items-start gap-2 p-2 bg-blue-500/10 border border-blue-500/30 rounded text-xs text-blue-400">
             <AlertCircle size={12} className="mt-0.5 shrink-0" />
             <p>System audio will be captured from the selected screen/window</p>
+          </div>
+        )}
+
+        {/* Audio Level Preview (VU Meters) */}
+        {audioConfig.microphoneEnabled && audioConfig.selectedMicId && (
+          <div className="space-y-3 pt-4 border-t border-gray-700">
+            <label className="text-sm font-medium text-gray-300">
+              Audio Levels (Preview)
+            </label>
+
+            {/* Microphone VU Meter */}
+            {previewMicStream && (
+              <VUMeter stream={previewMicStream} label="Microphone" />
+            )}
+
+            <p className="text-xs text-gray-500">
+              Speak into your microphone to test audio levels before recording
+            </p>
           </div>
         )}
       </div>
