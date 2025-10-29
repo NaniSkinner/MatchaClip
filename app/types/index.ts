@@ -186,6 +186,8 @@ export interface AudioDevice {
 export interface CameraDevice {
   deviceId: string;
   label: string;
+  kind: "videoinput";
+  groupId: string;
   facingMode?: "user" | "environment";
 }
 
@@ -210,6 +212,7 @@ export interface RecordingState {
   currentScreen:
     | "mode-selector"
     | "screen-selector"
+    | "webcam-selector"
     | "countdown"
     | "recording"
     | "success";

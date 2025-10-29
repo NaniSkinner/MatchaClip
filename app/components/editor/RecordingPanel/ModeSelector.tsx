@@ -14,8 +14,8 @@ export default function ModeSelector() {
   const dispatch = useAppDispatch();
 
   const handleModeSelect = (mode: RecordingMode) => {
-    if (mode !== RecordingMode.SCREEN) {
-      // Only screen mode is available in Phase 1
+    if (mode === RecordingMode.PIP) {
+      // PiP mode coming in Phase 3
       return;
     }
     dispatch(setRecordingMode(mode));
@@ -34,8 +34,7 @@ export default function ModeSelector() {
       name: "Webcam",
       description: "Record from your camera",
       icon: Camera,
-      enabled: false,
-      comingSoon: true,
+      enabled: true,
     },
     {
       id: RecordingMode.PIP,
@@ -117,8 +116,8 @@ export default function ModeSelector() {
       })}
 
       <div className="mt-6 p-3 bg-blue-500/10 border border-blue-500/30 rounded text-xs text-blue-400">
-        <strong>Phase 1:</strong> Screen recording only. Webcam and PiP modes
-        coming in future updates.
+        <strong>Phase 2:</strong> Screen and webcam recording available. PiP
+        mode coming in Phase 3.
       </div>
     </div>
   );

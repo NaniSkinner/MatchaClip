@@ -5,11 +5,14 @@ import { useAppDispatch, useAppSelector } from "../../../store";
 import {
   closePanel,
   startRecording,
+  setError,
+  setCurrentScreen,
 } from "../../../store/slices/recordingSlice";
 import { RECORDING_CONSTANTS } from "./constants";
 import { useRecordingSession } from "../../../hooks/useRecordingSession";
 import ModeSelector from "./ModeSelector";
 import ScreenSelector from "./ScreenSelector";
+import WebcamSelector from "./WebcamSelector";
 import CountdownOverlay from "./CountdownOverlay";
 import RecordingControls from "./RecordingControls";
 import StorageIndicator from "./StorageIndicator";
@@ -22,8 +25,15 @@ import StorageIndicator from "./StorageIndicator";
  */
 export default function RecordingPanel() {
   const dispatch = useAppDispatch();
-  const { isPanelOpen, currentScreen, error, isRecording, selectedSource } =
-    useAppSelector((state) => state.recording);
+  const {
+    isPanelOpen,
+    currentScreen,
+    error,
+    isRecording,
+    selectedSource,
+    mode,
+    webcamConfig,
+  } = useAppSelector((state) => state.recording);
   const { startRecording: startRecordingSession, stopRecordingAndSave } =
     useRecordingSession();
 
@@ -46,16 +56,51 @@ export default function RecordingPanel() {
   }, [isPanelOpen, isRecording]);
 
   const handleCountdownComplete = async () => {
-    if (!selectedSource) {
-      console.error("[RecordingPanel] No source selected");
+    // Check if we have the required source based on mode
+    if (mode === "screen" && !selectedSource) {
+      console.error("[RecordingPanel] No screen source selected");
+      dispatch(
+        setError("No screen source selected. Please select a screen or window.")
+      );
+      dispatch(setCurrentScreen("screen-selector"));
+      return;
+    }
+
+    if (mode === "webcam" && !webcamConfig.selectedCameraId) {
+      console.error("[RecordingPanel] No camera selected");
+      dispatch(setError("No camera selected. Please select a camera."));
+      dispatch(setCurrentScreen("webcam-selector"));
       return;
     }
 
     try {
       dispatch(startRecording());
-      await startRecordingSession(selectedSource.id);
+
+      if (mode === "screen" && selectedSource) {
+        // Screen recording mode
+        await startRecordingSession(selectedSource.id);
+      } else if (mode === "webcam") {
+        // Webcam recording mode - for now, show error as it's not fully implemented
+        console.log("[RecordingPanel] Webcam recording starting...");
+        // TODO: Implement webcam recording in Task 6
+
+        // Stop the "recording" state immediately
+        dispatch(setCurrentScreen("webcam-selector"));
+
+        // Show error after a brief delay so the screen transition completes
+        setTimeout(() => {
+          dispatch(
+            setError(
+              "Webcam recording is not yet fully implemented. This is Task 6!"
+            )
+          );
+        }, 100);
+
+        // The webcam stream is preserved in Redux for future use
+      }
     } catch (err) {
       console.error("[RecordingPanel] Failed to start recording:", err);
+      dispatch(setError("Failed to start recording. Please try again."));
     }
   };
 
@@ -107,6 +152,7 @@ export default function RecordingPanel() {
           {/* Render content based on current screen */}
           {currentScreen === "mode-selector" && <ModeSelector />}
           {currentScreen === "screen-selector" && <ScreenSelector />}
+          {currentScreen === "webcam-selector" && <WebcamSelector />}
           {currentScreen === "recording" && (
             <RecordingControls onStop={handleStopRecording} />
           )}

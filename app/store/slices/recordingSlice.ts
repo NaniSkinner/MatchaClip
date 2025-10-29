@@ -84,9 +84,17 @@ const recordingSlice = createSlice({
     },
 
     // Mode selection
-    setRecordingMode: (state, action: PayloadAction<RecordingMode>) => {
+    setRecordingMode: (state, action: PayloadAction<RecordingMode | null>) => {
       state.mode = action.payload;
-      state.currentScreen = "screen-selector";
+      // Route to appropriate selector based on mode
+      if (action.payload === "webcam") {
+        state.currentScreen = "webcam-selector";
+      } else if (action.payload === "screen") {
+        state.currentScreen = "screen-selector";
+      } else {
+        // null mode - back to mode selector
+        state.currentScreen = "mode-selector";
+      }
     },
 
     // Source selection
