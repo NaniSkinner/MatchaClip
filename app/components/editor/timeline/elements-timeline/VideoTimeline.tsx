@@ -213,8 +213,8 @@ export default function VideoTimeline() {
                   {clip.fileName}
                 </span>
 
-                {/* Trim markers - now use clip object directly */}
-                {isActive && (
+                {/* Trim markers - Hidden (not functional) */}
+                {/* {isActive && (
                   <>
                     <TrimMarker
                       key={`in-${clip.id}`}
@@ -237,7 +237,7 @@ export default function VideoTimeline() {
                       timelineZoom={timelineZoom}
                     />
                   </>
-                )}
+                )} */}
               </div>
               <Moveable
                 ref={(el: Moveable | null) => {

@@ -1,7 +1,7 @@
 import { Player, PlayerRef } from "@remotion/player";
 import Composition from "./sequence/composition";
 import { useAppSelector, useAppDispatch } from "@/app/store";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import { setIsPlaying } from "@/app/store/slices/projectSlice";
 import { useDispatch } from "react-redux";
 
@@ -108,6 +108,7 @@ export const PreviewPlayer = () => {
       style={{ width: "100%", height: "100%" }}
       controls
       clickToPlay={false}
+      acknowledgeRemotionLicense
     />
   );
 };

@@ -279,7 +279,14 @@ export default function ProjectClient({
         {/* Center - Video Preview */}
         <div className="flex items-center justify-center flex-col flex-1 overflow-hidden">
           <ProjectName />
-          <PreviewPlayer />
+          <div className="w-full h-full flex items-center justify-center p-4">
+            <div
+              className="w-full"
+              style={{ aspectRatio: "16/9", maxHeight: "100%" }}
+            >
+              <PreviewPlayer />
+            </div>
+          </div>
         </div>
 
         {/* Right Sidebar - Element Properties */}

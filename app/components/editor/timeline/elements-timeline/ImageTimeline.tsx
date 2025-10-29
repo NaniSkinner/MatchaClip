@@ -215,8 +215,8 @@ export default function ImageTimeline() {
                   {clip.fileName}
                 </span>
 
-                {/* Trim markers - now use clip object directly */}
-                {isActive && (
+                {/* Trim markers - Hidden (not functional) */}
+                {/* {isActive && (
                   <>
                     <TrimMarker
                       key={`in-${clip.id}`}
@@ -239,7 +239,7 @@ export default function ImageTimeline() {
                       timelineZoom={timelineZoom}
                     />
                   </>
-                )}
+                )} */}
               </div>
 
               <Moveable
