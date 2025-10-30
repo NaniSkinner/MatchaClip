@@ -1,5 +1,5 @@
 "use client";
-import { Square } from "lucide-react";
+import { Square, Pause, Play } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { useAppSelector } from "../../../store";
 import RecordingTimer from "./RecordingTimer";
@@ -7,17 +7,26 @@ import { VUMeter } from "./VUMeter";
 
 interface RecordingControlsProps {
   onStop: () => void;
+  onPause: () => void;
+  onResume: () => void;
 }
 
 /**
  * RecordingControls Component
  *
- * Shows recording status, timer, and stop button
+ * Shows recording status, timer, pause/resume, and stop button
+ * Phase 4: Added pause/resume functionality
  */
-export default function RecordingControls({ onStop }: RecordingControlsProps) {
+export default function RecordingControls({
+  onStop,
+  onPause,
+  onResume,
+}: RecordingControlsProps) {
   const {
     isRecording,
+    isPaused,
     startTime,
+    totalPausedDuration,
     selectedSource,
     mode,
     webcamConfig,
@@ -61,9 +70,19 @@ export default function RecordingControls({ onStop }: RecordingControlsProps) {
     <div className="space-y-6">
       {/* Recording Indicator */}
       <div className="flex items-center space-x-2">
-        <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-        <span className="text-sm font-medium text-red-400">REC</span>
-        <span className="text-sm text-gray-400">Recording...</span>
+        {isPaused ? (
+          <>
+            <div className="w-3 h-3 bg-yellow-500 rounded-full animate-pulse" />
+            <span className="text-sm font-medium text-yellow-400">PAUSED</span>
+            <span className="text-sm text-gray-400">Recording paused</span>
+          </>
+        ) : (
+          <>
+            <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+            <span className="text-sm font-medium text-red-400">REC</span>
+            <span className="text-sm text-gray-400">Recording...</span>
+          </>
+        )}
       </div>
 
       {/* Source Info - Screen Recording */}
@@ -118,10 +137,17 @@ export default function RecordingControls({ onStop }: RecordingControlsProps) {
               muted
             />
             {/* Recording indicator overlay */}
-            <div className="absolute top-2 left-2 flex items-center gap-2 px-2 py-1 bg-red-600/90 rounded text-xs font-medium text-white">
-              <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-              REC
-            </div>
+            {isPaused ? (
+              <div className="absolute top-2 left-2 flex items-center gap-2 px-2 py-1 bg-yellow-600/90 rounded text-xs font-medium text-white animate-pulse">
+                <Pause size={12} />
+                PAUSED
+              </div>
+            ) : (
+              <div className="absolute top-2 left-2 flex items-center gap-2 px-2 py-1 bg-red-600/90 rounded text-xs font-medium text-white">
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                REC
+              </div>
+            )}
             {/* PiP mode indicator */}
             {mode === "pip" && (
               <div className="absolute top-2 right-2 px-2 py-1 bg-purple-600/90 rounded text-xs font-medium text-white">
@@ -136,7 +162,12 @@ export default function RecordingControls({ onStop }: RecordingControlsProps) {
       {isRecording && (
         <div>
           <p className="text-xs text-gray-500 mb-2">Duration</p>
-          <RecordingTimer startTime={startTime} isRecording={isRecording} />
+          <RecordingTimer
+            startTime={startTime}
+            isRecording={isRecording}
+            isPaused={isPaused}
+            totalPausedDuration={totalPausedDuration}
+          />
         </div>
       )}
 
@@ -157,19 +188,47 @@ export default function RecordingControls({ onStop }: RecordingControlsProps) {
         </div>
       )}
 
-      {/* Stop Button */}
-      <button
-        onClick={onStop}
-        className="w-full py-3 px-4 bg-red-600 hover:bg-red-700 rounded-lg transition-colors font-medium text-white flex items-center justify-center space-x-2"
-      >
-        <Square size={18} fill="white" />
-        <span>Stop Recording</span>
-      </button>
+      {/* Control Buttons */}
+      <div className="space-y-3">
+        {/* Pause/Resume Button */}
+        {isPaused ? (
+          <button
+            onClick={onResume}
+            className="w-full py-3 px-4 bg-green-600 hover:bg-green-700 rounded-lg transition-colors font-medium text-white flex items-center justify-center space-x-2"
+          >
+            <Play size={18} fill="white" />
+            <span>Resume Recording</span>
+          </button>
+        ) : (
+          <button
+            onClick={onPause}
+            className="w-full py-3 px-4 bg-yellow-600 hover:bg-yellow-700 rounded-lg transition-colors font-medium text-white flex items-center justify-center space-x-2"
+          >
+            <Pause size={18} />
+            <span>Pause Recording</span>
+          </button>
+        )}
+
+        {/* Stop Button */}
+        <button
+          onClick={onStop}
+          className="w-full py-3 px-4 bg-red-600 hover:bg-red-700 rounded-lg transition-colors font-medium text-white flex items-center justify-center space-x-2"
+        >
+          <Square size={18} fill="white" />
+          <span>Stop Recording</span>
+        </button>
+      </div>
 
       {/* Instructions */}
       <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded text-xs text-blue-400">
         <p className="font-medium mb-1">Keyboard Shortcuts:</p>
         <ul className="space-y-1">
+          <li>
+            <kbd className="px-1.5 py-0.5 bg-gray-800 rounded text-xs mr-1">
+              Space
+            </kbd>
+            Pause/Resume recording
+          </li>
           <li>
             <kbd className="px-1.5 py-0.5 bg-gray-800 rounded text-xs mr-1">
               ⌘S

@@ -110,6 +110,7 @@ export const VideoSequenceItem: React.FC<VideoSequenceItemProps> = ({
               width: safeWidth,
               height: safeHeight,
               position: "absolute",
+              objectFit: "contain",
             }}
           />
         </div>

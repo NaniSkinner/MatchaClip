@@ -27,6 +27,11 @@ const initialState: RecordingState = {
   startTime: null,
   elapsedTime: 0,
 
+  // Phase 4: Pause/Resume tracking
+  pausedAt: null,
+  totalPausedDuration: 0,
+  pauseCount: 0,
+
   // Media
   mediaRecorder: null,
   recordedChunks: [],
@@ -124,16 +129,32 @@ const recordingSlice = createSlice({
       state.elapsedTime = 0;
       state.recordedChunks = [];
       state.currentScreen = "recording";
+      // Reset pause tracking for new recording
+      state.isPaused = false;
+      state.pausedAt = null;
+      state.totalPausedDuration = 0;
+      state.pauseCount = 0;
     },
     stopRecording: (state) => {
       state.isRecording = false;
+      state.isPaused = false;
       state.mediaRecorder = null;
+      // Keep pause tracking data for metadata generation
     },
     pauseRecording: (state) => {
-      state.isPaused = true;
+      if (state.isRecording && !state.isPaused) {
+        state.isPaused = true;
+        state.pausedAt = Date.now();
+      }
     },
     resumeRecording: (state) => {
-      state.isPaused = false;
+      if (state.isRecording && state.isPaused && state.pausedAt) {
+        state.isPaused = false;
+        const pauseDuration = Date.now() - state.pausedAt;
+        state.totalPausedDuration += pauseDuration;
+        state.pauseCount += 1;
+        state.pausedAt = null;
+      }
     },
 
     // Timer updates
@@ -179,6 +200,11 @@ const recordingSlice = createSlice({
       return {
         ...initialState,
         recordings: state.recordings, // Preserve recordings list
+        // Reset pause tracking
+        isPaused: false,
+        pausedAt: null,
+        totalPausedDuration: 0,
+        pauseCount: 0,
       };
     },
 

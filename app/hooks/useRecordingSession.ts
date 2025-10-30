@@ -1,10 +1,12 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../store";
 import {
   addRecordedChunk,
   setMediaRecorder,
   setError,
   stopRecording,
+  pauseRecording as pauseRecordingAction,
+  resumeRecording as resumeRecordingAction,
   setCurrentScreen,
   addRecording,
   setMicrophoneStream,
@@ -32,6 +34,8 @@ interface UseRecordingSessionReturn {
   startRecording: (options: RecordingStartOptions) => Promise<void>;
   stopRecordingAndSave: () => Promise<RecordingMetadata | null>;
   cancelRecording: () => void;
+  pauseRecording: () => void;
+  resumeRecording: () => void;
   isRecording: boolean;
   error: string | null;
 }
@@ -49,9 +53,13 @@ export function useRecordingSession(): UseRecordingSessionReturn {
     mode: recordingMode,
     webcamConfig,
     pipConfig,
+    totalPausedDuration,
+    pauseCount,
+    isPaused,
   } = useAppSelector((state) => state.recording);
   const [isRecording, setIsRecording] = useState(false);
   const [error, setErrorState] = useState<string | null>(null);
+  const [warningShown, setWarningShown] = useState(false);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -59,6 +67,45 @@ export function useRecordingSession(): UseRecordingSessionReturn {
   const micStreamRef = useRef<MediaStream | null>(null);
   const systemAudioStreamRef = useRef<MediaStream | null>(null);
   const compositorRef = useRef<VideoCompositor | null>(null);
+
+  /**
+   * Auto-stop check interval
+   * Phase 4: Check recording time (excluding paused duration) against max duration
+   */
+  useEffect(() => {
+    if (!isRecording || !startTime) {
+      setWarningShown(false);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      const elapsedTime = Date.now() - startTime;
+      const recordingTime = elapsedTime - totalPausedDuration;
+
+      // Show warning at 30 seconds remaining (4:30 mark)
+      if (
+        !warningShown &&
+        recordingTime >= RECORDING_CONSTANTS.MAX_DURATION - 30000 &&
+        recordingTime < RECORDING_CONSTANTS.MAX_DURATION
+      ) {
+        toast("30 seconds remaining", { icon: "⚠️" });
+        setWarningShown(true);
+      }
+
+      // Auto-stop when recording time reaches max duration
+      if (recordingTime >= RECORDING_CONSTANTS.MAX_DURATION) {
+        console.log(
+          "[Recording] Auto-stopping at max recording duration:",
+          recordingTime,
+          "ms"
+        );
+        toast(RECORDING_MESSAGES.MAX_DURATION_REACHED);
+        stopRecordingAndSave();
+      }
+    }, 1000); // Check every second
+
+    return () => clearInterval(interval);
+  }, [isRecording, startTime, totalPausedDuration, warningShown]);
 
   /**
    * Combine video and audio streams using Web Audio API
@@ -363,15 +410,6 @@ export function useRecordingSession(): UseRecordingSessionReturn {
           mimeType
         );
         toast.success(RECORDING_MESSAGES.RECORDING_STARTED);
-
-        // Auto-stop at max duration
-        setTimeout(() => {
-          if (mediaRecorderRef.current?.state === "recording") {
-            console.log("[Recording] Auto-stopping at max duration");
-            toast(RECORDING_MESSAGES.MAX_DURATION_REACHED);
-            stopRecordingAndSave();
-          }
-        }, RECORDING_CONSTANTS.MAX_DURATION);
       } catch (err: any) {
         console.error("[Recording] Failed to start:", err);
         const errorMsg = err.message || "Failed to start recording";
@@ -417,7 +455,12 @@ export function useRecordingSession(): UseRecordingSessionReturn {
         );
 
         // Calculate actual recording duration
-        const recordingDuration = startTime ? Date.now() - startTime : 0;
+        const elapsedTime = startTime ? Date.now() - startTime : 0;
+        const actualRecordingDuration = elapsedTime - totalPausedDuration;
+
+        console.log(
+          `[Recording] Total elapsed: ${elapsedTime}ms, Paused: ${totalPausedDuration}ms, Actual: ${actualRecordingDuration}ms, Pause count: ${pauseCount}`
+        );
 
         // Generate metadata
         const recordingId = uuidv4();
@@ -448,11 +491,15 @@ export function useRecordingSession(): UseRecordingSessionReturn {
           id: recordingId,
           name: `${recordingName} Recording ${new Date(now).toLocaleString()}`,
           type: recordingType,
-          duration: recordingDuration, // Duration in milliseconds
+          duration: elapsedTime, // Total elapsed time
           size: videoBlob.size,
           createdAt: now,
           resolution,
           fps,
+          // Phase 4: Pause/Resume metadata
+          pauseCount: pauseCount,
+          totalPausedDuration: totalPausedDuration,
+          actualRecordingDuration: actualRecordingDuration,
         };
 
         // Save to IndexedDB
@@ -488,11 +535,56 @@ export function useRecordingSession(): UseRecordingSessionReturn {
     }, [dispatch]);
 
   /**
+   * Pause recording (Phase 4)
+   */
+  const pauseRecording = useCallback(() => {
+    const recorder = mediaRecorderRef.current;
+    if (!recorder || recorder.state !== "recording") {
+      console.warn("[Recording] Cannot pause: not recording");
+      return;
+    }
+
+    try {
+      recorder.pause();
+      dispatch(pauseRecordingAction());
+      toast("Recording paused", { icon: "⏸️" });
+      console.log("[Recording] Paused");
+    } catch (err) {
+      console.error("[Recording] Failed to pause:", err);
+      toast.error("Failed to pause recording");
+    }
+  }, [dispatch]);
+
+  /**
+   * Resume recording (Phase 4)
+   */
+  const resumeRecording = useCallback(() => {
+    const recorder = mediaRecorderRef.current;
+    if (!recorder || recorder.state !== "paused") {
+      console.warn("[Recording] Cannot resume: not paused");
+      return;
+    }
+
+    try {
+      recorder.resume();
+      dispatch(resumeRecordingAction());
+      toast.success("Recording resumed");
+      console.log("[Recording] Resumed");
+    } catch (err) {
+      console.error("[Recording] Failed to resume:", err);
+      toast.error("Failed to resume recording");
+    }
+  }, [dispatch]);
+
+  /**
    * Cancel recording without saving
    */
   const cancelRecording = useCallback(() => {
     const recorder = mediaRecorderRef.current;
-    if (recorder && recorder.state === "recording") {
+    if (
+      recorder &&
+      (recorder.state === "recording" || recorder.state === "paused")
+    ) {
       recorder.stop();
     }
     setIsRecording(false);
@@ -550,6 +642,8 @@ export function useRecordingSession(): UseRecordingSessionReturn {
     startRecording,
     stopRecordingAndSave,
     cancelRecording,
+    pauseRecording,
+    resumeRecording,
     isRecording,
     error,
   };

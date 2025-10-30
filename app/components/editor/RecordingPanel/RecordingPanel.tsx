@@ -31,13 +31,18 @@ export default function RecordingPanel() {
     currentScreen,
     error,
     isRecording,
+    isPaused,
     selectedSource,
     mode,
     webcamConfig,
     webcamStream,
   } = useAppSelector((state) => state.recording);
-  const { startRecording: startRecordingSession, stopRecordingAndSave } =
-    useRecordingSession();
+  const {
+    startRecording: startRecordingSession,
+    stopRecordingAndSave,
+    pauseRecording: pauseRecordingSession,
+    resumeRecording: resumeRecordingSession,
+  } = useRecordingSession();
 
   const handleClose = () => {
     // Don't allow closing while recording
@@ -45,17 +50,38 @@ export default function RecordingPanel() {
     dispatch(closePanel());
   };
 
-  // Handle ESC key to close panel
+  const handlePauseRecording = () => {
+    pauseRecordingSession();
+  };
+
+  const handleResumeRecording = () => {
+    resumeRecordingSession();
+  };
+
+  // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // ESC - Close panel (only when not recording)
       if (e.key === "Escape" && isPanelOpen && !isRecording) {
         handleClose();
+        return;
+      }
+
+      // Spacebar - Pause/Resume (only when recording)
+      if (e.code === "Space" && isRecording && currentScreen === "recording") {
+        e.preventDefault(); // Prevent page scroll
+        if (isPaused) {
+          handleResumeRecording();
+        } else {
+          handlePauseRecording();
+        }
+        return;
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isPanelOpen, isRecording]);
+  }, [isPanelOpen, isRecording, isPaused, currentScreen]);
 
   const handleCountdownComplete = async () => {
     // Check if we have the required source based on mode
@@ -173,7 +199,11 @@ export default function RecordingPanel() {
           {currentScreen === "webcam-selector" && <WebcamSelector />}
           {currentScreen === "pip-configurator" && <PiPConfigurator />}
           {currentScreen === "recording" && (
-            <RecordingControls onStop={handleStopRecording} />
+            <RecordingControls
+              onStop={handleStopRecording}
+              onPause={handlePauseRecording}
+              onResume={handleResumeRecording}
+            />
           )}
           {currentScreen === "success" && (
             <div className="text-center py-8">

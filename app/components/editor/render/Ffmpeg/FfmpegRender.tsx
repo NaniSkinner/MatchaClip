@@ -169,7 +169,11 @@ export default function FfmpegRender({}: FileUploaderProps) {
                 sortedMediaFiles[i].width
               }:${
                 sortedMediaFiles[i].height
-              },setpts=PTS-STARTPTS+${positionStart.toFixed(
+              }:force_original_aspect_ratio=decrease,pad=${
+                sortedMediaFiles[i].width
+              }:${
+                sortedMediaFiles[i].height
+              }:(ow-iw)/2:(oh-ih)/2:black,setpts=PTS-STARTPTS+${positionStart.toFixed(
                 3
               )}/TB[${visualLabel}]`
             );
@@ -178,7 +182,13 @@ export default function FfmpegRender({}: FileUploaderProps) {
             filters.push(
               `[${i}:v]scale=${sortedMediaFiles[i].width}:${
                 sortedMediaFiles[i].height
-              },setpts=PTS+${positionStart.toFixed(3)}/TB[${visualLabel}]`
+              }:force_original_aspect_ratio=decrease,pad=${
+                sortedMediaFiles[i].width
+              }:${
+                sortedMediaFiles[i].height
+              }:(ow-iw)/2:(oh-ih)/2:black,setpts=PTS+${positionStart.toFixed(
+                3
+              )}/TB[${visualLabel}]`
             );
           }
 

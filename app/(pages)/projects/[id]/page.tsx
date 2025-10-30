@@ -35,7 +35,6 @@ import ProjectName from "../../../components/editor/player/ProjectName";
 import { storeFile } from "@/app/store";
 import toast from "react-hot-toast";
 import { setFilesID } from "@/app/store/slices/projectSlice";
-import { Video, Music, Image as ImageIcon, Type } from "lucide-react";
 import RecordingPanel from "../../../components/editor/RecordingPanel/RecordingPanel";
 
 export default function ProjectClient({
@@ -365,27 +364,33 @@ export default function ProjectClient({
               <TextProperties />
             </div>
           )}
+          {!activeElement && (
+            <div className="flex flex-col items-center justify-center h-full text-center text-gray-400">
+              <svg
+                className="w-16 h-16 mb-4 opacity-30"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"
+                />
+              </svg>
+              <p className="text-sm font-medium mb-2">No Element Selected</p>
+              <p className="text-xs px-4">
+                Click on an element in the timeline to view and edit its
+                properties
+              </p>
+            </div>
+          )}
         </div>
       </div>
       {/* Timeline at bottom */}
       <div className="flex flex-row border-t border-[#3F3F3F]">
-        <div className="w-[50px] bg-[#1E1D21] flex flex-col items-center justify-start pt-20">
-          <div className="relative h-16 flex items-center justify-center">
-            <Video size={20} className="text-gray-400" />
-          </div>
-
-          <div className="relative h-16 flex items-center justify-center">
-            <Music size={20} className="text-gray-400" />
-          </div>
-
-          <div className="relative h-16 flex items-center justify-center">
-            <ImageIcon size={20} className="text-gray-400" />
-          </div>
-
-          <div className="relative h-16 flex items-center justify-center">
-            <Type size={20} className="text-gray-400" />
-          </div>
-        </div>
+        <div className="w-[50px] bg-[#1E1D21]"></div>
         <Timeline />
       </div>
 

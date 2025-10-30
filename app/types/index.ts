@@ -165,6 +165,10 @@ export interface RecordingMetadata {
   thumbnailUrl?: string;
   resolution: { width: number; height: number };
   fps: number;
+  // Phase 4: Pause/Resume tracking
+  pauseCount?: number;
+  totalPausedDuration?: number; // milliseconds
+  actualRecordingDuration?: number; // duration excluding paused time
 }
 
 export interface RecordingSettings {
@@ -233,6 +237,11 @@ export interface RecordingState {
   // Timing
   startTime: number | null;
   elapsedTime: number; // milliseconds
+
+  // Phase 4: Pause/Resume tracking
+  pausedAt: number | null; // timestamp when paused
+  totalPausedDuration: number; // cumulative paused time in milliseconds
+  pauseCount: number; // number of times paused in current session
 
   // Media
   mediaRecorder: MediaRecorder | null;
